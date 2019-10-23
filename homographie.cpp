@@ -9,20 +9,29 @@
 using namespace std;
 using namespace cv;
 
-void onMouse1(int event, int x, int y, void *data){
-	cout << "x,y" << x << y << endl;
-
+void onMouse1(int event, int x, int y, int foo, void *data){
+	if (event != EVENT_LBUTTONDOWN)
+		return;
+	cout << "x = " << x << ", y = " << y << endl;
 	}
 
 int main()
 {
-	Data data;
+	void *data;
 
-	Image<Vec3b> photo_image = Image<Vec3b>(imread("images/photo.jpg"));
-	Image<Vec3b> above_image = Image<Vec3b>(imread("images/above.jpg"));
+	Image<Vec3b> photo_image = Image<Vec3b>(imread("../input/images/photo.jpg"));
+	Image<Vec3b> above_image = Image<Vec3b>(imread("../input/images/above.jpg"));
 
 	imshow("above", above_image);
 	setMouseCallback("above", onMouse1, &data);
+
+	vector<Point2f> positions_1, positions_2;
+	// for(size_t index = 0; index < matches_vector.size(); index++){
+	// 	DMatch match = matches_vector[index][0];
+	// 	positions_1.push_back(m1[match.queryIdx].pt);
+	// 	positions_2.push_back(m2[match.trainIdx].pt);
+	// }
+	// Mat H = findHomography(positions_2, positions_1, RANSAC);
 	
 	// int k = 1;
 	// BFMatcher M(NORM_HAMMING);
@@ -33,13 +42,6 @@ int main()
 	// drawMatches(I1, m1, I2, m2, matches_vector, matches_output);
 	// imshow("matches", matches_output);
 
-	// vector<Point2f> positions_1, positions_2;
-	// for(size_t index = 0; index < matches_vector.size(); index++){
-	// 	DMatch match = matches_vector[index][0];
-	// 	positions_1.push_back(m1[match.queryIdx].pt);
-	// 	positions_2.push_back(m2[match.trainIdx].pt);
-	// }
-	// Mat H = findHomography(positions_2, positions_1, RANSAC);
 
 	// Mat K(I1.rows, 2 * I1.cols, CV_8U);
 	// cout << "good H " << H << endl;
