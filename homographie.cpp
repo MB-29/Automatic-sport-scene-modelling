@@ -15,6 +15,41 @@ void onMouse1(int event, int x, int y, int foo, void *data){
 	cout << "x = " << x << ", y = " << y << endl;
 	}
 
+int open()
+{
+	VideoCapture cap("../input/videos/ShortBasket.wmv");
+
+	// Check if camera opened successfully
+	if (!cap.isOpened()) {
+		cout << "Error opening video stream or file" << endl;
+		return -1;
+	}
+
+	Mat frame;
+	// Capture frame-by-frame
+	cap >> frame;
+
+	// If the frame is empty, break immediately
+	//if (frame.empty())
+	  //break;
+
+	// Display the resulting frame
+	imshow("Frame", frame);
+
+	// Press  ESC on keyboard to exit
+	//char c=(char)waitKey(25);
+	//if(c==27)
+	 // break;
+
+// When everything done, release the video capture object
+//cap.release();
+
+// Closes all the frames
+//destroyAllWindows();
+	return(0);
+
+}
+
 int main()
 {
 	void *data;
@@ -24,6 +59,7 @@ int main()
 
 	imshow("above", above_image);
 	setMouseCallback("above", onMouse1, &data);
+	open();
 
 	vector<Point2f> positions_1, positions_2;
 	// for(size_t index = 0; index < matches_vector.size(); index++){
