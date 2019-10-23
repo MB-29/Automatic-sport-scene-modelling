@@ -4,5 +4,5 @@ FIND_PACKAGE(OpenCV REQUIRED)
 
 PROJECT(Xtracking)
 
-ADD_EXECUTABLE(homographie homographie.cpp)
+ADD_EXECUTABLE(homographie openvideo.cpp image.cpp image.h)
 TARGET_LINK_LIBRARIES(homographie ${OpenCV_LIBS})
