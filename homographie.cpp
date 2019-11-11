@@ -1,26 +1,12 @@
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/features2d/features2d.hpp>
-#include <opencv2/calib3d/calib3d.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-
-#include <iostream>
-#include "image.h"
-
-using namespace std;
-using namespace cv;
-
-void onMouse1(int event, int x, int y, int foo, void *data){
-	if (event != EVENT_LBUTTONDOWN)
-		return;
-	cout << "x = " << x << ", y = " << y << endl;
-	}
+#include "homographie.h"
 
 int open()
 {
 	VideoCapture cap("../input/videos/ShortBasket.wmv");
 
 	// Check if camera opened successfully
-	if (!cap.isOpened()) {
+	if (!cap.isOpened())
+	{
 		cout << "Error opening video stream or file" << endl;
 		return -1;
 	}
@@ -31,7 +17,7 @@ int open()
 
 	// If the frame is empty, break immediately
 	//if (frame.empty())
-	  //break;
+	//break;
 
 	// Display the resulting frame
 	imshow("Frame", frame);
@@ -39,61 +25,71 @@ int open()
 	// Press  ESC on keyboard to exit
 	//char c=(char)waitKey(25);
 	//if(c==27)
-	 // break;
+	// break;
 
-// When everything done, release the video capture object
-//cap.release();
+	// When everything done, release the video capture object
+	//cap.release();
 
-// Closes all the frames
-//destroyAllWindows();
-	return(0);
-
+	// Closes all the frames
+	//destroyAllWindows();
+	return (0);
 }
 
-int main()
+
+
+void add_point_source(int event, int x, int y, int foo, void *data)
 {
-	void *data;
+	if (event != EVENT_LBUTTONDOWN)
+		return;
+	Matches *matches = (Matches *)data;
+	int count = matches->source_points.size();
+	cout << "x = " << x << ", y = " << y << endl;
+	Point point = Point(x, y);
+	circle(matches->source_image, point, 2, Scalar(0, 255, 0), 2);
+	putText(matches->source_image, to_string(count), point, FONT_HERSHEY_PLAIN, 2, 2);
+	imshow("source", matches->source_image);
+	matches->source_points.push_back(point);
+	cout << "size of source points : " << count << endl;
+}
+void add_point_target(int event, int x, int y, int foo, void *data)
+{
+	if (event != EVENT_LBUTTONDOWN)
+		return;
+	Matches *matches = (Matches *) data;
+	int count = matches->target_points.size();
+	cout << "x = " << x << ", y = " << y << endl;
+	Point point = Point(x, y);
+	circle(matches->target_image, point, 2, Scalar(0, 255, 0), 2);
+	putText(matches->target_image, to_string(count), point, FONT_HERSHEY_PLAIN, 2, 2);
+	imshow("target", matches->target_image);
+	matches->target_points.push_back(point);
+	cout << "size of target points : " << count << endl;
+}
 
-	Image<Vec3b> photo_image = Image<Vec3b>(imread("../input/images/photo.jpg"));
-	Image<Vec3b> above_image = Image<Vec3b>(imread("../input/images/above.jpg"));
+void apply_homography(int event, int x, int y, int foo, void *data)
+{
+	if (event != EVENT_LBUTTONDOWN)
+		return;
+	Homography_transformation *input = (Homography_transformation *)data;
+	Vec3d point(x,y, 1);
+	cout << "Homography = " << input->homography_matrix << endl;
+	cout << "Applying homography" << endl;
+	Mat output = input->homography_matrix * ((Mat)point) ;  
+	cout << "drawing a circle" << endl;
 
-	imshow("above", above_image);
-	setMouseCallback("above", onMouse1, &data);
-	open();
-
-	vector<Point2f> positions_1, positions_2;
-	// for(size_t index = 0; index < matches_vector.size(); index++){
-	// 	DMatch match = matches_vector[index][0];
-	// 	positions_1.push_back(m1[match.queryIdx].pt);
-	// 	positions_2.push_back(m2[match.trainIdx].pt);
-	// }
-	// Mat H = findHomography(positions_2, positions_1, RANSAC);
+	circle(input->source_image, Point(x,y), 2, Scalar(0, 0, 255), 2);
+	imshow("source", input->source_image);
 	
-	// int k = 1;
-	// BFMatcher M(NORM_HAMMING);
-	// vector<vector<DMatch>> matches_vector;
-	// M.knnMatch(descriptor_1, descriptor_2, matches_vector, k);
+	double u = output.at<double>(0,0);
+	double v = output.at<double>(0,1);
+	double w = output.at<double>(0,2);
+	Point target_point(u/w, v/w);
 
-	// Mat matches_output;
-	// drawMatches(I1, m1, I2, m2, matches_vector, matches_output);
-	// imshow("matches", matches_output);
+	circle(input->target_image, target_point, 2, Scalar(0, 0, 255), 2);
+	cout << "target point : " << target_point << endl;
+	imshow("target", input->target_image);
+}
 
+void solve_homography(){
 
-	// Mat K(I1.rows, 2 * I1.cols, CV_8U);
-	// cout << "good H " << H << endl;
-	// cout << "I1.size " << I1.size() << endl;
-	// cout << "I2.size " << I2.size() << endl;
-	// warpPerspective(I2, K, H , K.size());
-	// cout << "K.size " << K.size() << endl;
-	// for (size_t i = 0; i < I1.rows; i++) {
-    //     for (size_t j = 0; j < I1.cols; j++) {
-    //         K.at<uchar>(i, j) = I1.at<uchar>(i, j);
-    //     }
-	// }
-	// imshow("K", K);
-
-	
-
-	waitKey(0);
-	return 0;
 }
