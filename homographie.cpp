@@ -30,30 +30,30 @@ void add_point_target(int event, int x, int y, int foo, void *data)
 	cout << "size of target points : " << count << endl;
 }
 
-void apply_homography(int event, int x, int y, int foo, void *data)
+Point homographic_image(const Mat &homography_matrix, Point input_point){
+	Vec3d input_point_3D(input_point.x, input_point.y, 1);
+	Mat output = homography_matrix * ((Mat)input_point_3D) ;  
+	double u = output.at<double>(0,0);
+	double v = output.at<double>(0,1);
+	double w = output.at<double>(0,2);
+	return Point(u/w, v/w);
+}
+
+void draw_homographic_pair(int event, int x, int y, int foo, void *data)
 {
 	if (event != EVENT_LBUTTONDOWN)
 		return;
 	Homography_transformation *input = (Homography_transformation *)data;
-	Vec3d point(x,y, 1);
-	cout << "Homography = " << input->homography_matrix << endl;
 	cout << "Applying homography" << endl;
-	Mat output = input->homography_matrix * ((Mat)point) ;  
-	cout << "drawing a circle" << endl;
 
+	cout << "drawing a circle" << endl;
 	circle(input->source_image, Point(x,y), 2, Scalar(0, 0, 255), 2);
 	imshow("source", input->source_image);
-	
-	double u = output.at<double>(0,0);
-	double v = output.at<double>(0,1);
-	double w = output.at<double>(0,2);
-	Point target_point(u/w, v/w);
+
+
+	Point target_point = homographic_image(input->homography_matrix, Point(x,y));
 
 	circle(input->target_image, target_point, 2, Scalar(0, 0, 255), 2);
 	cout << "target point : " << target_point << endl;
 	imshow("target", input->target_image);
-}
-
-void solve_homography(){
-
 }
