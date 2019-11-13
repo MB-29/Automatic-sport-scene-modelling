@@ -1,7 +1,10 @@
 #include "homographie.h"
+#include "video.h"
 
 int main()
-{
+{	
+	int test;
+	test = open();
 	Matches matches;
 	Image<Vec3b> source_image = Image<Vec3b>(imread("../input/images/photo.jpg"));
 	Image<Vec3b> target_image = Image<Vec3b>(imread("../input/images/above.jpg"));
