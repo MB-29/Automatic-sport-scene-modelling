@@ -20,7 +20,7 @@ int main()
 	input.source_image = source_image;
 	input.target_image = target_image;
 	input.homography_matrix = homography;
-	setMouseCallback("source", apply_homography, &input);
+	setMouseCallback("source", draw_homographic_pair, &input);
 
 	waitKey();
 

@@ -32,4 +32,5 @@ struct Homography_transformation
 
 void add_point_source(int event, int x, int y, int foo, void *data);
 void add_point_target(int event, int x, int y, int foo, void *data);
-void apply_homography(int event, int x, int y, int foo, void *data);
+Point homographic_image(const Mat &homography_matrix, Point input_point);
+void draw_homographic_pair(int event, int x, int y, int foo, void *data);
