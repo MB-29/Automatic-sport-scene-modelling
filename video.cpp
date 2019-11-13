@@ -1,5 +1,3 @@
-#include "opencv2/opencv.hpp"
-#include <iostream>
 #include "video.h"
 #include "image.h"
 #include <opencv2/core/utility.hpp>
@@ -84,4 +82,8 @@ int open()
 
 	// Closes all the frames
 	//destroyAllWindows();
+}
+
+int main(){
+	open();
 }
