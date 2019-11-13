@@ -2,15 +2,12 @@
 
 int open()
 {	// List of tracker types in OpenCV 3.4.1
-	//string trackerTypes[8] = { "BOOSTING", "MIL", "KCF", "TLD","MEDIANFLOW", "GOTURN", "MOSSE", "CSRT" };
-	// vector <string> trackerTypes(types, std::end(types));
 
-	// Create a tracker
-	//string trackerType = trackerTypes[2];
 
-	//Ptr<Tracker> tracker;
 
-	VideoCapture cap("../input/videos/Wildlife.wmv");
+	Ptr<TrackerKCF> tracker = TrackerKCF::create();
+
+	VideoCapture cap("../input/videos/ShortBasket.mp4");
 
 	// Check if camera opened successfully
 	if (!cap.isOpened())
@@ -19,13 +16,12 @@ int open()
 		return -1;
 	};
 	int i = 0;
-	cvNamedWindow("Frame", CV_WINDOW_AUTOSIZE);
+	// NamedWindow("Frame", WINDOW_AUTOSIZE);
 	bool ok = true;
 
 		while (1) {
 
 			i += 1;
-			cout << i << endl;
 			Mat frame;
 
 			// Capture frame-by-frame
@@ -54,7 +50,7 @@ int open()
 
 	// When everything done, release the video capture object
 	cap.release();
-	return (0);
+	return 0;
 
 	// Closes all the frames
 	//destroyAllWindows();
