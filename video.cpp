@@ -1,16 +1,4 @@
-#include "opencv2/opencv.hpp"
-#include <iostream>
 #include "video.h"
-#include "image.h"
-#include <opencv2/core.hpp>
-#include <opencv2/video/tracking.hpp>
-
-
-
-
-using namespace std;
-using namespace cv;
-
 
 int open()
 {	// List of tracker types in OpenCV 3.4.1
@@ -70,4 +58,8 @@ int open()
 
 	// Closes all the frames
 	//destroyAllWindows();
+}
+
+int main(){
+	open();
 }
