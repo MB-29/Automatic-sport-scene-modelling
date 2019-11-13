@@ -1,7 +1,7 @@
 #include "video.h"
 #include "image.h"
 #include <opencv2/core/utility.hpp>
-//#include <opencv2/tracking/tracker.hpp>
+#include <opencv2/tracking/tracker.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv2/highgui.hpp>
 
@@ -14,13 +14,11 @@ using namespace cv;
 
 int open()
 {	// List of tracker types in OpenCV 3.4.1
+
 	//string trackerTypes[8] = { "BOOSTING", "MIL", "KCF", "TLD","MEDIANFLOW", "GOTURN", "MOSSE", "CSRT" };
 	//vector <string> trackerTypes(types, std::end(types));
 
-	// Create a tracker
-	//string trackerType = trackerTypes[2];
-
-    //Ptr<TrackerKCF> tracker;
+	Ptr<TrackerKCF> tracker = TrackerKCF::create();
 
 	VideoCapture cap("../input/videos/ShortBasket.mp4");
 
@@ -31,7 +29,7 @@ int open()
 		return -1;
 	};
 	int i = 0;
-	cvNamedWindow("Frame", CV_WINDOW_AUTOSIZE);
+	// NamedWindow("Frame", WINDOW_AUTOSIZE);
 	bool ok = true;
 	Rect2d bbox(287, 23, 86, 320);
 	Mat frame;
@@ -45,7 +43,6 @@ int open()
 		while (1) {
 
 			i += 1;
-			cout << i << endl;
 			Mat frame;
 
 			// Capture frame-by-frame
@@ -78,7 +75,7 @@ int open()
 
 	// When everything done, release the video capture object
 	cap.release();
-	return (0);
+	return 0;
 
 	// Closes all the frames
 	//destroyAllWindows();
