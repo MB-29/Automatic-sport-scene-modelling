@@ -4,8 +4,10 @@ FIND_PACKAGE(OpenCV REQUIRED)
 
 PROJECT(Xtracking)
 
+
 # ADD_EXECUTABLE(x-tracking main.cpp homographie.cpp homographie.h image.cpp image.h)
+
 ADD_EXECUTABLE(video video.cpp video.h)
-# TARGET_LINK_LIBRARIES(x-tracking ${OpenCV_LIBS})
+#TARGET_LINK_LIBRARIES(x-tracking ${OpenCV_LIBS})
 TARGET_LINK_LIBRARIES(video ${OpenCV_LIBS})
 

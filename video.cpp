@@ -1,9 +1,22 @@
 #include "video.h"
+#include "image.h"
+#include <opencv2/core/utility.hpp>
+#include <opencv2/tracking/tracker.hpp>
+#include <opencv2/videoio.hpp>
+#include <opencv2/highgui.hpp>
+
+
+
+
+using namespace std;
+using namespace cv;
+
 
 int open()
 {	// List of tracker types in OpenCV 3.4.1
 
-
+	//string trackerTypes[8] = { "BOOSTING", "MIL", "KCF", "TLD","MEDIANFLOW", "GOTURN", "MOSSE", "CSRT" };
+	//vector <string> trackerTypes(types, std::end(types));
 
 	VideoCapture video("../input/videos/ShortBasket.mp4");
 
@@ -23,6 +36,14 @@ int open()
 
 	// NamedWindow("Frame", WINDOW_AUTOSIZE);
 	bool ok = true;
+	Rect2d bbox(287, 23, 86, 320);
+	Mat frame;
+
+	// Capture frame-by-frame
+	cap.read(frame);
+
+	// Uncomment the line below to select a different bounding box 
+	bbox = selectROI(frame, false);
 
 
 		while (1) {
@@ -37,8 +58,10 @@ int open()
 				cout << "problem" << endl;
 				break;
 			}
+
 			tracker->update(frame, window);
 			rectangle( frame, window, Scalar( 255, 0, 0 ), 2, 1 );
+
 
 			// Display the resulting frame
 			imshow("Frame ", frame);
