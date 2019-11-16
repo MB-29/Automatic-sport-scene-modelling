@@ -1,80 +1,57 @@
 #include "video.h"
-#include "image.h"
-#include <opencv2/core/utility.hpp>
-#include <opencv2/tracking/tracker.hpp>
-#include <opencv2/videoio.hpp>
-#include <opencv2/highgui.hpp>
-
-
-
-
-using namespace std;
-using namespace cv;
-
 
 int open()
 {	// List of tracker types in OpenCV 3.4.1
 
-	//string trackerTypes[8] = { "BOOSTING", "MIL", "KCF", "TLD","MEDIANFLOW", "GOTURN", "MOSSE", "CSRT" };
-	//vector <string> trackerTypes(types, std::end(types));
 
-	Ptr<TrackerKCF> tracker = TrackerKCF::create();
 
-	VideoCapture cap("../input/videos/ShortBasket.mp4");
+	VideoCapture video("../input/videos/ShortBasket.mp4");
 
 	// Check if camera opened successfully
-	if (!cap.isOpened())
+	if (!video.isOpened())
 	{
 		cout << "Error opening video stream or file" << endl;
 		return -1;
 	};
-	int i = 0;
+	int frame_index = 0;
+	Mat frame;
+	video >> frame;
+	Rect2d window = selectROI("tracker",frame);	
+
+	Ptr<TrackerKCF> tracker = TrackerKCF::create();
+	tracker->init(frame, window);
+
 	// NamedWindow("Frame", WINDOW_AUTOSIZE);
 	bool ok = true;
-	Rect2d bbox(287, 23, 86, 320);
-	Mat frame;
 
-	// Capture frame-by-frame
-	cap.read(frame);
-
-	// Uncomment the line below to select a different bounding box 
-	bbox = selectROI(frame, false);
 
 		while (1) {
 
-			i += 1;
-			Mat frame;
+			frame_index += 1;
 
 			// Capture frame-by-frame
-			cap.read(frame);
+			video.read(frame);
 
 			// If the frame is empty, break immediately
 			if (frame.empty()) {
 				cout << "problem" << endl;
 				break;
 			}
-			 
-			// Display bounding box. 
-			rectangle(frame, bbox, Scalar(255, 0, 0), 2, 1);
-
+			tracker->update(frame, window);
+			rectangle( frame, window, Scalar( 255, 0, 0 ), 2, 1 );
 
 			// Display the resulting frame
-			imshow("Frame", frame);
+			imshow("Frame ", frame);
 
+			// Press ESC to stop
+			if(waitKey(1)==27)break;
 
-			// Press  ESC on keyboard to exit
-			char c = (char)waitKey(25);
-			cout << c << endl;
-			if (c == 27) {
-				ok = false;
-				break;
-			}
 
 		}
 
 
 	// When everything done, release the video capture object
-	cap.release();
+	video.release();
 	return 0;
 
 	// Closes all the frames
