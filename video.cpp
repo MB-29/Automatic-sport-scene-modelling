@@ -18,7 +18,10 @@ int open()
 	video >> frame;
 	Rect2d window = selectROI("tracker",frame);	
 
-	Ptr<TrackerKCF> tracker = TrackerKCF::create();
+	// CSRT is mmore accurate, KCF is faster
+	Ptr<TrackerCSRT> tracker = TrackerCSRT::create();
+	// Ptr<TrackerKCF> tracker = TrackerKCF::create();
+
 	tracker->init(frame, window);
 
 	// NamedWindow("Frame", WINDOW_AUTOSIZE);
