@@ -7,7 +7,7 @@ PROJECT(Xtracking)
 
 # ADD_EXECUTABLE(x-tracking main.cpp homographie.cpp homographie.h image.cpp image.h)
 
-ADD_EXECUTABLE(video video.cpp video.h)
+ADD_EXECUTABLE(video video.cpp video.h rectangles.h rectangles.cpp)
 #TARGET_LINK_LIBRARIES(x-tracking ${OpenCV_LIBS})
 TARGET_LINK_LIBRARIES(video ${OpenCV_LIBS})
 
