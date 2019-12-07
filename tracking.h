@@ -18,6 +18,6 @@ using namespace cv;
 
 void initialize_trackers(vector<Rect2d> rectangles, vector<Ptr<TrackerCSRT>> &player_trackers, Mat &frame);
 void record_hog_rectangles(string video_file_path, vector<vector<Rect>> &frame_rectangles);
-void record_tracking_rectangles(string video_file_path, vector<vector<Rect>> hog_frame_rectangles, vector<vector<Rect>> tracking_rectangles);
-
+void record_tracking_rectangles(string video_file_path, vector<vector<Rect>> &hog_frame_rectangles, vector<vector<Rect>> &matched_rectangles);
+bool overlap(Rect new_rectangle, vector<Rect> tracking_rectangles);
 void add_trackers(vector<Rect> &detected_rectangles, vector<Rect> &matched_rectangles, vector<Ptr<TrackerCSRT>> &player_trackers, Mat &frame);

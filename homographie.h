@@ -33,5 +33,6 @@ struct Homography_transformation
 
 void add_point_source(int event, int x, int y, int foo, void *data);
 void add_point_target(int event, int x, int y, int foo, void *data);
-Point homographic_image(const Mat &homography_matrix, Point input_point);
-void draw_homographic_pair(int event, int x, int y, int foo, void *data);
+Point homographic_transformation(const Mat &homography_matrix, Point input_point);
+void draw_homographic_pair(int x, int y, void *data);
+void video_homography(string video_file_path, vector<vector<Rect>> &tracking_rectangles, void *data);
