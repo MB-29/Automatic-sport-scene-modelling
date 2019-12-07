@@ -1,5 +1,6 @@
 #include "homographie.h"
 #include "tracking.h"
+#include "detection.h"
 
 string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/short.mp4";
 string above_image_path = "../input/images/pitch_resized.png";
@@ -45,8 +46,12 @@ int main()
 	vector<vector<Rect>> hog_frame_rectangles;
 	vector<vector<Rect>> matched_rectangles;
 
-	record_hog_rectangles(VIDEO_FILE_PATH, hog_frame_rectangles);
+	int history = 30, sizeMinRect = 10, gaussianSize = 7;
+	string technic = "a";
+	record_backgroundsubstract_rectangles(VIDEO_FILE_PATH, hog_frame_rectangles, technic, history, sizeMinRect, gaussianSize);
+	// record_hog_rectangles(VIDEO_FILE_PATH, hog_frame_rectangles);
 	int rectangle_count = hog_frame_rectangles[10].size();
+
 
 	record_tracking_rectangles(VIDEO_FILE_PATH, hog_frame_rectangles, matched_rectangles);
 	cout << "Tracking complete" << endl;
@@ -59,6 +64,9 @@ int main()
 	input.homography_matrix = homography;
 	cout << "Starting video homography" << endl;
 	video_homography(VIDEO_FILE_PATH, matched_rectangles, &input);
+
+
+
 	waitKey();
 	return 0;
 }
