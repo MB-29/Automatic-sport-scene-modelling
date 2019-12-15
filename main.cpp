@@ -35,6 +35,7 @@ int main()
 
 	cout << "Building homography" << endl;
 	Mat homography = findHomography(matches.source_points, matches.target_points);
+	// Mat homography;
 
 
 	int frame_count = video.get(CAP_PROP_FRAME_COUNT);
@@ -43,17 +44,18 @@ int main()
 	if (!video.isOpened())
 		cout << "Error opening video stream or file" << endl;
 
-	vector<vector<Rect>> hog_frame_rectangles;
+	vector<vector<Rect>> detected_rectangles;
 	vector<vector<Rect>> matched_rectangles;
 
 	int history = 30, sizeMinRect = 10, gaussianSize = 7;
 	string technic = "a";
-	record_backgroundsubstract_rectangles(VIDEO_FILE_PATH, hog_frame_rectangles, technic, history, sizeMinRect, gaussianSize);
-	// record_hog_rectangles(VIDEO_FILE_PATH, hog_frame_rectangles);
-	int rectangle_count = hog_frame_rectangles[10].size();
+	cout << "Detecting rectangles" << endl;
+	// record_backgroundsubstract_rectangles(VIDEO_FILE_PATH, detected_rectangles, technic, history, sizeMinRect, gaussianSize);
+	record_detection_rectangles(VIDEO_FILE_PATH, detected_rectangles);
+	cout << "Detection complete" << endl;
+	cout << "Detecting rectangles for " << detected_rectangles.size() << " frames" << endl;
 
-
-	record_tracking_rectangles(VIDEO_FILE_PATH, hog_frame_rectangles, matched_rectangles);
+	record_tracking_rectangles(VIDEO_FILE_PATH, detected_rectangles, matched_rectangles);
 	cout << "Tracking complete" << endl;
 	cout << "Tracking vector has "<< matched_rectangles.size()<< " elements" << endl;
 

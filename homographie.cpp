@@ -32,6 +32,7 @@ void add_point_target(int event, int x, int y, int foo, void *data)
 Point homographic_transformation(const Mat &homography_matrix, Point input_point)
 {
 	Vec3d input_point_3D(input_point.x, input_point.y, 1);
+	cout << " computing homographic output" << endl;
 	Mat output = homography_matrix * ((Mat)input_point_3D);
 	double u = output.at<double>(0, 0);
 	double v = output.at<double>(0, 1);
@@ -65,9 +66,7 @@ void video_homography(string video_file_path, vector<vector<Rect>> &tracking_rec
 	cout << "Recovering homography data"<< endl;
 	Homography_transformation *homography_data = (Homography_transformation *)data;
 	Image<Vec3b> target_image = homography_data->target_image;
-	cout << "Iterator"<< endl;
 	auto tracking_rectangles_iterator = tracking_rectangles.begin();
-	cout << "deference"<< endl;
 	vector<Rect> frame_tracking_rectangles = *(tracking_rectangles_iterator);
 	cout << "first frame has "<< frame_tracking_rectangles.size()<< "rectangles" << endl;
 
@@ -106,7 +105,7 @@ void video_homography(string video_file_path, vector<vector<Rect>> &tracking_rec
 			Rect player_rectangle = frame_tracking_rectangles[rectangle_index];
 			float x = player_rectangle.x + player_rectangle.width / 2;
 			float y = player_rectangle.y + player_rectangle.height / 2;
-			cout << "rectangle index = " << rectangle_index <<" x = "<< x << " y = " << y << endl;	
+			// cout << "rectangle i`ndex = " << rectangle_index <<" x = "<< x << " y = " << y << endl;	
 			draw_homographic_pair(x, y, homography_data);
 		}
 		
