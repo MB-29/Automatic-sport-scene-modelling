@@ -1,6 +1,7 @@
 #include "detection.h"
 #include "rectangles.h"
 
+
 float WEIGHT_THRESHOLD = 0.7;
 // string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/short.mp4";
 
@@ -13,87 +14,83 @@ float WEIGHT_THRESHOLD = 0.7;
 // Demander au prof si c'est mieux ? (Il faudra rep�rer les amas de pixels comme un seul)
 // Dans rectangle, refaire HOG pour s�parer les diff�rents joueurs quand il y en a plusieurs ?
 
-void initializeMask(Mat &foregroundMask, string filename)
+
+void moyenneMask(Mat &Moy, string filename)
 {
 	VideoCapture capInit(filename);
 	Image<Vec3b> img;
-	bool ok = capInit.grab();
 	int i = 0;
-
-	if (ok == false)
-	{
-
-		std::cout << "Video Capture Fail Init" << std::endl;
-	}
-	else
-	{
-
-		// obtain input image from source
-		capInit.retrieve(img, CAP_OPENNI_BGR_IMAGE);
-		capInit.retrieve(img, CAP_OPENNI_BGR_IMAGE);
-		capInit.retrieve(img, CAP_OPENNI_BGR_IMAGE);
-		int n = img.cols;
-		int m = img.rows;
-		Mat Moy1(cv::Size(m, n), CV_32F);
-		Mat Moy2(cv::Size(m, n), CV_32F);
-		Mat Moy3(cv::Size(m, n), CV_32F);
-		i++;
-		for (int j = 0; j++; j < m)
-		{
-			for (int l; l++; l < n)
-			{
-				Moy1.at<float>(j, l) += img.at<Vec3b>(j, l).val[0] / 255.0;
-				Moy2.at<float>(j, l) += img.at<Vec3b>(j, l).val[0] / 255.0;
-				Moy3.at<float>(j, l) += img.at<Vec3b>(j, l).val[0] / 255.0;
-			}
-		};
-		//cv::imshow("essai", Moy1);
-		cout << Moy1.at<float>(0, 0) << endl;
-		cout << Moy1.at<float>(0, 1) << endl;
-		cout << Moy1.at<float>(1, 0) << endl;
-		waitKey(200);
-	}
-
-	for (;;)
-	{
-
+	bool ok = capInit.grab();
+	int frame_count = capInit.get(CAP_PROP_FRAME_COUNT);
+	cout << "Video of " << frame_count << " frames loaded" << endl;
+	capInit.retrieve(img, CAP_OPENNI_BGR_IMAGE);
+	int n = img.cols;
+	int m = img.rows;
+	Image<Vec3f> Interm;
+	img.convertTo(Moy, CV_32F, 1 / (255.0*frame_count));
+	
+	for (;;) {
 		bool ok = capInit.grab();
+		if (ok == false) {
 
-		if (ok == false)
-		{
-
-			std::cout << "Video Capture Fail" << std::endl;
+			std::cout << "Video Capture Fail Init 1" << std::endl;
 			break;
-		}
-		else
-		{
 
-			i++;
+
+		}
+		else {
+			
 			// obtain input image from source
 			capInit.retrieve(img, CAP_OPENNI_BGR_IMAGE);
+			img.convertTo(Interm, CV_32F, 1 / (255.0*frame_count));
+			//cv::divide(Interm, cv::Scalar((float)frame_count, (float)frame_count, (float)frame_count), Interm, 1, CV_32F);
+
+			i++;
+			add(Moy, Interm, Moy);
+		
 		}
+	
+
 	}
+	
+	destroyAllWindows();
 	capInit.release();
+	
 }
 
-void labelBlobs(const cv::Mat &binary, std::vector<std::vector<Point>> &blobs, std::vector<cv::Rect> &rects, int sizeMinRect)
+
+void initializeMask(Mat &foregroundMask, const Mat &frame, const Mat &Moy, int seuil) {
+	Image<Vec3f> imgFloat;
+	frame.convertTo(imgFloat, CV_32F, 1 / 255.0);
+	int n = frame.cols;
+	int m = frame.rows;
+	for (int i = 0; i < m; i++) {
+		for (int j = 0; j < n; j++) {
+			if (norm(imgFloat.at<Vec3f>(i, j), Moy.at<Vec3f>(i, j), NORM_L2) > seuil) {
+				foregroundMask.at<uchar>(i, j) = 255;
+			}
+			else {
+				foregroundMask.at<uchar>(i, j) = 0;
+			}
+
+		}
+	}
+}
+
+
+void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs, std::vector < cv::Rect> &rects, int sizeMinRect, int sizeMaxRect, int sizeMinBlob, bool blobFlag)
 {
 	blobs.clear();
 	rects.clear();
 
 	// Using labels from 2+ for each blob
-	cv::Mat label_image;
+	cv::Mat label_image, label_image_old, mask;
 	binary.convertTo(label_image, CV_32FC1);
+	
 
-	cout << label_image.at<int>(0, 0) << endl;
-	cout << label_image.at<int>(1, 0) << endl;
-
-	for (int i = 0; i < label_image.rows; i++)
-	{
-		for (int j = 0; j < label_image.cols; j++)
-		{
-			if ((int)label_image.at<int>(i, j) > 0)
-			{
+	for (int i = 0; i < label_image.rows; i++) {
+		for (int j = 0; j < label_image.cols; j++) {
+			if ((int)label_image.at<int>(i, j) > 0) {
 				label_image.at<int>(i, j) = 0;
 			}
 			else
@@ -102,49 +99,55 @@ void labelBlobs(const cv::Mat &binary, std::vector<std::vector<Point>> &blobs, s
 			}
 		}
 	}
+	label_image.copyTo(label_image_old);
 
 	int label_count = 2; // starts at 2 because 0,1 are used already
-
-	for (int y = 0; y < binary.rows; y++)
-	{
-		for (int x = 0; x < binary.cols; x++)
-		{
-			if (((int)label_image.at<int>(y, x) == 255) || ((int)label_image.at<int>(y, x) == 0))
-			{
+	int m = label_image.rows;
+	int n = label_image.cols;
+	mask = Mat::zeros(Size(n +2, m+2), CV_8U);
+	for (int y = 0; y < m; y++) {
+		for (int x = 0; x < n; x++) {
+			if (((int)label_image.at<int>(y, x) == 0)) {
 				cv::Rect rect;
-				cv::floodFill(label_image, cv::Point(x, y), cv::Scalar(label_count), &rect, cv::Scalar(0), cv::Scalar(1), 8);
+
+				cv::floodFill(label_image, mask, cv::Point(x, y), cv::Scalar(label_count), &rect, cv::Scalar(0), cv::Scalar(1), 8);
 				// loDiff (maximal lower diff to connect), upDiff (maximal upper diff to connect), $rect : output minimal bounding rectangle
 				// last arguments : 4 if only 4 neighbours checked ; 8 is 8 of them
-
 				std::vector<Point> blob;
-
-				for (int i = rect.y; i < (rect.y + rect.height); i++)
-				{
-					for (int j = rect.x; j < (rect.x + rect.width); j++)
-					{
-						if ((int)label_image.at<int>(i, j) != label_count)
-						{
-							continue;
+				for (int i = rect.y; i < (rect.y + rect.height); i++) {
+					for (int j = rect.x; j < (rect.x + rect.width); j++) {						
+						if ((int)label_image.at<int>(i, j) != (int)label_image_old.at<int>(i,j) ){
+							blob.push_back(cv::Point(j, i));
 						}
-
-						blob.push_back(cv::Point(j, i));
 					}
 				}
 
-				if (rect.height > sizeMinRect)
-				{
-					blobs.push_back(blob);
-					rects.push_back(rect);
+				if (blobFlag) {
+					if (blob.size() > sizeMinBlob) {
+						if ((rect.height > sizeMinRect) && (rect.height < sizeMaxRect)) {
+							blobs.push_back(blob);
+							rects.push_back(rect);
+						}
+					}
+				}
+				else {
+					if ((rect.height > sizeMinRect) && (rect.height < sizeMaxRect)) {
+						blobs.push_back(blob);
+						rects.push_back(rect);
+					}
 				}
 
+
 				label_count++;
+				label_image.copyTo(label_image_old);
 			}
 		}
 	}
 }
 
-void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<Rect>> &frame_rectangles, string technic, int history, int sizeMinRect, int gaussianSize)
+void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<Rect>> &frame_rectangles, string technic, int history, int sizeMinRect, int sizeMaxRect, int sizeMinBlob, bool blob, int gaussianSize, int seuil)
 {
+
 	// Init background substractor
 
 	//Ptr<BackgroundSubtractorMOG2> bg_model = createBackgroundSubtractorMOG2(history, 16, true).dynamicCast<BackgroundSubtractorMOG2>();
@@ -155,49 +158,63 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 	// Create empty input img, foreground and background image and foreground mask.
 	Mat img, foregroundMask, backgroundImage, foregroundImg;
 
+	Image<Vec3f> Moy;
+
+	if (seuil > 0) {
+		moyenneMask(Moy, video_file_path);
+	}
+
+
 	// capture video from source 0, which is web camera, If you want capture video from file just replace //by �VideoCapture cap("videoFile.mov")
 	VideoCapture cap(video_file_path);
 	int frame_count = cap.get(CAP_PROP_FRAME_COUNT);
 	cout << "Video of " << frame_count << " frames loaded" << endl;
 
+
 	int frame_index = 1;
 
 	// main loop to grab sequence of input files
-	for (;;)
-	{
+	for (;;) {
 
 		bool ok = cap.grab();
 
-		if (ok == false)
-		{
+		if (ok == false) {
 
 			std::cout << "Video Capture Fail" << std::endl;
 			break;
+
 		}
 		cout << "frame index = " << frame_index << endl;
-		frame_index++;
+		frame_index ++;
 
 		// obtain input image from source
+
 		cap.retrieve(img, CAP_OPENNI_BGR_IMAGE);
-		// Just resize input image if you want
-		//resize(img, img, Size(640, 480));
 
-		// create foreground mask of proper size
-		if (foregroundMask.empty())
-		{
-			foregroundMask.create(img.size(), img.type());
-			//initializeMask(foregroundMask, filename);
+		
+		if (foregroundMask.empty()) {
+			foregroundMask.create(img.size(), CV_8U);
+
 		}
-
 		// compute foreground mask 8 bit image
 		// -1 is parameter that chose automatically your learning rate
 
 		bg_model->apply(img, foregroundMask, true ? -1 : 0);
+
+		
+
 		//bg_model->apply(img, foregroundMask, 0.1);
+
+		if ((frame_index <10)&&(seuil>0)) {
+			foregroundMask.create(img.size(), CV_8U);
+			initializeMask(foregroundMask, img, Moy, seuil);
+
+
+		}
 
 		// smooth the mask to reduce noise in image
 		//GaussianBlur(foregroundMask, foregroundMask, Size(11, 11), 3.5, 3.5);
-		GaussianBlur(foregroundMask, foregroundMask, Size(gaussianSize, 7), 3.5, 3.5);
+		GaussianBlur(foregroundMask, foregroundMask, Size(gaussianSize, gaussianSize), 3.5, 3.5);
 
 		// threshold mask to saturate at black and white values
 		threshold(foregroundMask, foregroundMask, 10, 255, THRESH_BINARY);
@@ -209,21 +226,19 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 		//Get background image
 		bg_model->getBackgroundImage(backgroundImage);
 
-		std::vector<std::vector<Point>> blobs;
-		std::vector<cv::Rect> rects;
+		std::vector<std::vector<Point> > blobs;
+		std::vector< cv::Rect > rects;
 		cv::Mat binary;
-		labelBlobs(foregroundMask, blobs, rects, sizeMinRect);
-		// cout << "size" << endl;
-		// cout << blobs.size() << endl;
+		labelBlobs(foregroundMask, blobs, rects, sizeMinRect, sizeMaxRect, sizeMinBlob, blob);
 
+		
 		Mat foregroundImgWithRect;
 
 		foregroundImg.copyTo(foregroundImgWithRect);
 
 		frame_rectangles.push_back(rects);
 
-		for (int k = 0; k < rects.size(); k++)
-		{
+		for (int k = 0; k < rects.size(); k++) {
 			rectangle(foregroundImgWithRect, rects[k], cv::Scalar(255, 255, 255), 3);
 		}
 
@@ -239,15 +254,21 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 		imshow("foreground mask", foregroundMask);
 		imshow("foreground image", foregroundImgWithRect);
 
-		if (waitKey(25) == 27)
-			break;
+		if (waitKey(25) == 27)break;
 
-		if (!backgroundImage.empty())
-		{
+		if (!backgroundImage.empty()) {
 			imshow("mean background image", backgroundImage);
+
 		}
+
 	}
+	destroyWindow("foreground image");
+	destroyWindow("mean background image");
+	destroyWindow("foreground mask");
+	destroyWindow("real image");
+
 }
+
 
 // void BrightnessAndContrastAuto(const cv::Mat &src, cv::Mat &dst, float clipHistPercent = 0)
 // {
@@ -312,7 +333,7 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 // 	// convertTo operates with saurate_cast
 // 	src.convertTo(dst, -1, alpha, beta);
 
-// 	// restore alpha channel from source
+// 	// restore alpha channel from source 
 // 	if (dst.type() == CV_8UC4)
 // 	{
 // 		int from_to[] = { 3, 3 };
@@ -321,29 +342,32 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 // 	return;
 // }
 
+
+
 //void add_trackers(vector<Rect> &detected_rectangles, vector<Rect> &matched_rectangles, vector<Ptr<TrackerCSRT>> &player_trackers, Mat &frame)
 //{
-//for (auto iterator = detected_rectangles.begin(); iterator != detected_rectangles.end(); iterator++)
-//{
-//Ptr<TrackerCSRT> tracker = TrackerCSRT::create();
-//tracker->init(frame, *(iterator));
-//if ( player_trackers.size() == 0)
-//{
-//cout << "no matched rectangles" << endl;
-//player_trackers.push_back(tracker);
-//matched_rectangles.push_back(*(iterator));
-//cout << "Matched rectangles count : " << matched_rectangles.size() << endl;
-//cout << "detected rectangles count : " << detected_rectangles.size() << endl;			return;
-//}
-//if (!overlap(*(iterator), matched_rectangles))
-//{
-//Ptr<TrackerCSRT> tracker = TrackerCSRT::create();
-//tracker->init(frame, *(iterator));
-//player_trackers.push_back(tracker);
-//matched_rectangles.push_back(*(iterator));
-//}
+	//for (auto iterator = detected_rectangles.begin(); iterator != detected_rectangles.end(); iterator++)
+	//{
+		//Ptr<TrackerCSRT> tracker = TrackerCSRT::create();
+		//tracker->init(frame, *(iterator));
+		//if ( player_trackers.size() == 0)
+		//{
+			//cout << "no matched rectangles" << endl;
+			//player_trackers.push_back(tracker);
+			//matched_rectangles.push_back(*(iterator));
+			//cout << "Matched rectangles count : " << matched_rectangles.size() << endl;
+			//cout << "detected rectangles count : " << detected_rectangles.size() << endl;			return;
+		//}
+		//if (!overlap(*(iterator), matched_rectangles))
+		//{
+			//Ptr<TrackerCSRT> tracker = TrackerCSRT::create();
+			//tracker->init(frame, *(iterator));
+			//player_trackers.push_back(tracker);
+			//matched_rectangles.push_back(*(iterator));
+		//}
 
-//}
+
+	//}
 //}
 
 // void add_trackers(vector<Rect> &hog_rectangles, vector<Rect> &tracking_rectangles, vector<Ptr<TrackerCSRT>> player_trackers){
@@ -358,13 +382,14 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 // 			tracker->init(frame, *(iterator));
 // 			player_trackers
 
-// Create a mask image for drawing purposes
-//Mat mask = Mat::zeros(old_frame.size(), old_frame.type());
+	// Create a mask image for drawing purposes
+	//Mat mask = Mat::zeros(old_frame.size(), old_frame.type());
 
-//setMouseCallback("source", add_point_source, &matches);
+	//setMouseCallback("source", add_point_source, &matches);
 // 		}
 // 	return;
 // }
+
 
 // void record_hog_rectangles(string video_file_path, vector<vector<Rect>> &hog_frame_rectangles, int percent)
 // {

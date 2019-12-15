@@ -40,82 +40,62 @@ Point homographic_transformation(const Mat &homography_matrix, Point input_point
 	return Point(u / w, v / w);
 }
 
-void draw_homographic_pair(int x, int y, void *data)
+void draw_homographic_pair(Point point, Mat homography_matrix, Image<Vec3b> source_image, Image<Vec3b> target_image)
 {
-	Homography_transformation *input = (Homography_transformation *)data;
-	cout << "Applying homography" << endl;
-
-	// cout << "drawing a circle" << endl;
-	circle(input->source_image, Point(x, y), 2, Scalar(0, 0, 255), 2);
-	imshow("source", input->source_image);
-
-	Point target_point = homographic_transformation(input->homography_matrix, Point(x, y));
-
-	circle(input->target_image, target_point, 2, Scalar(0, 0, 255), 2);
+	circle(source_image, point, 2, Scalar(0, 0, 255), 2);
+	imshow("source", source_image);
+	Point target_point = homographic_transformation(homography_matrix, point);
+	circle(target_image, target_point, 2, Scalar(0, 0, 255), 2);
 	cout << "target point : " << target_point << endl;
-	imshow("target", input->target_image);
+	imshow("target", target_image);
 }
 
-void video_homography(string video_file_path, vector<vector<Rect>> &tracking_rectangles, void *data)
-{	
-	cout << "vector has "<< tracking_rectangles.size()<< " elements" << endl;
-
-
-	cout << "Loading file"<< video_file_path << endl;
+void video_homography(string video_file_path, vector<vector<Rect>> &tracking_rectangles, Mat homography_matrix, Image<Vec3b> target_image)
+{
+	// Load video and initialize
 	VideoCapture video(video_file_path);
-	cout << "Recovering homography data"<< endl;
-	Homography_transformation *homography_data = (Homography_transformation *)data;
-	Image<Vec3b> target_image = homography_data->target_image;
 	auto tracking_rectangles_iterator = tracking_rectangles.begin();
 	vector<Rect> frame_tracking_rectangles = *(tracking_rectangles_iterator);
-	cout << "first frame has "<< frame_tracking_rectangles.size()<< "rectangles" << endl;
-
 	// Check if camera opened successfully
 	if (!video.isOpened())
 		cout << "Error opening video stream or file" << endl;
 	cout << "Video loaded" << endl;
-	
 	Mat frame;
 	video >> frame;
-
 	int frame_index = 0;
 
 	while (1)
 	{
-
-		cout << "Reading frame "<<frame_index << endl;	
-		frame_index += 1;
-		video.read(frame);
-		// If the frame is empty, break immediately
 		if (frame.empty())
 		{
-			cout << "problem" << endl;
+			cout << "Coudl not read frame " << frame_index << endl;
 			break;
 		};
-		homography_data->source_image = Image<Vec3b>(frame);
-		Image<Vec3b> pitch_from_above(target_image);
-		homography_data->target_image = pitch_from_above;
 
+		Image<Vec3b> source_image(frame);
+		Image<Vec3b> frame_target_image = (Image<Vec3b>)target_image.clone();
 		vector<Rect> frame_tracking_rectangles = *(tracking_rectangles_iterator);
-		cout << "Frame tracking vector has "<< frame_tracking_rectangles.size() << " rectangles" << endl;	
+		cout << "Frame tracking vector has " << frame_tracking_rectangles.size() << " rectangles" << endl;
 
-
+		// Plot points on both source and target images
 		for (int rectangle_index = 0; rectangle_index < frame_tracking_rectangles.size(); rectangle_index++)
 		{
 			Rect player_rectangle = frame_tracking_rectangles[rectangle_index];
 			float x = player_rectangle.x + player_rectangle.width / 2;
-			float y = player_rectangle.y + player_rectangle.height / 2;
-			// cout << "rectangle i`ndex = " << rectangle_index <<" x = "<< x << " y = " << y << endl;	
-			draw_homographic_pair(x, y, homography_data);
+			float y = player_rectangle.y + player_rectangle.height;
+			Point point(x, y);
+			draw_homographic_pair(point, homography_matrix, source_image, frame_target_image);
 		}
-		
-		frame_index++;
+
+		// Increment
 		tracking_rectangles_iterator++;
+		frame_index += 1;
+		video.read(frame);
 
 		// Press ESC to stop
 		if (waitKey(1) == 27)
 			break;
-		
+
 		waitKey();
 	}
 	video.release();
