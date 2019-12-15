@@ -22,6 +22,7 @@ using namespace cv;
 
 //void add_trackers(vector<Rect> &detected_rectangles, vector<Rect> &matched_rectangles, vector<Ptr<TrackerCSRT>> &player_trackers, Mat &frame);
 
-void initializeMask(Mat &foregroundMask, string filename);
-void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs, std::vector < cv::Rect> &rects, int sizeMinRect);
-void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<Rect>> &frame_rectangles, string technic, int history, int sizeMinRect, int gaussianSize);
+void moyenneMask(Mat &Moy, string filename);
+void initializeMask(Mat &foregroundMask, const Mat &frame, const Mat &Moy, int seuil);
+void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs, std::vector < cv::Rect> &rects, int sizeMinRect, int sizeMaxRect, int sizeBlobMin, bool blob);
+void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<Rect>> &frame_rectangles, string technic, int history, int sizeMinRect, int sizeMaxRect, int sizeBlobMin, bool blob, int gaussianSize, int seuil);

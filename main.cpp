@@ -9,14 +9,18 @@ string photo_path = "../input/images/photo.jpg";
 
 int main()
 {	
-	// Find a homography from the live match camera angle to the top view of the pitch.
+
+	// Load video
 	VideoCapture video(VIDEO_FILE_PATH);
-	// Check if camera opened successfully
 	if (!video.isOpened())
 	{
 		cout << "Error opening video stream or file" << endl;
 		return -1;
 	};
+	int frame_count = video.get(CAP_PROP_FRAME_COUNT);
+	cout << "Video of " << frame_count << " frames loaded" << endl;
+
+	// Find camera view to top view homography.
 	Matches matches;
 	Image<Vec3b> first_frame;
 	video >> first_frame;
@@ -26,46 +30,37 @@ int main()
 	matches.target_image = target_image;
 	imshow("source", source_image);
 	imshow("target", target_image);
+	cout << "Point and click to set homographic pairs, then press any key to proceed." << endl;
 	setMouseCallback("source", add_point_source, &matches);
 	setMouseCallback("target", add_point_target, &matches);
-
 	waitKey();
 	destroyWindow("source");
 	destroyWindow("target");
-
 	cout << "Building homography" << endl;
 	Mat homography = findHomography(matches.source_points, matches.target_points);
+	// Mat homography;
 
-
-	int frame_count = video.get(CAP_PROP_FRAME_COUNT);
-	cout << "Video of " << frame_count << " frames loaded" << endl;
-	// Check if camera opened successfully
-	if (!video.isOpened())
-		cout << "Error opening video stream or file" << endl;
-
-	vector<vector<Rect>> hog_frame_rectangles;
+	// Player detection
+	vector<vector<Rect>> detected_rectangles;
 	vector<vector<Rect>> matched_rectangles;
-
-	int history = 30, sizeMinRect = 10, gaussianSize = 7;
+	int history = 30, sizeMinRect = 60, sizeMaxRect = 150, gaussianSize = 7, sizeBlobMin = 300, blobInt = 0;
+	float threshold = 0.5;
 	string technic = "a";
-	record_backgroundsubstract_rectangles(VIDEO_FILE_PATH, hog_frame_rectangles, technic, history, sizeMinRect, gaussianSize);
-	// record_hog_rectangles(VIDEO_FILE_PATH, hog_frame_rectangles);
-	int rectangle_count = hog_frame_rectangles[10].size();
+	cout << "Detecting rectangles" << endl;
+	record_backgroundsubstract_rectangles(VIDEO_FILE_PATH, detected_rectangles, technic, history, sizeMinRect, sizeMaxRect, sizeBlobMin, blobInt, gaussianSize, threshold);
+	// record_detection_rectangles(VIDEO_FILE_PATH, detected_rectangles);
+	cout << "Detection complete" << endl;
+	cout << "Detecting rectangles for " << detected_rectangles.size() << " frames" << endl;
 
-
-	record_tracking_rectangles(VIDEO_FILE_PATH, hog_frame_rectangles, matched_rectangles);
+	// Player tracking
+	record_tracking_rectangles(VIDEO_FILE_PATH, detected_rectangles, matched_rectangles);
 	cout << "Tracking complete" << endl;
 	cout << "Tracking vector has "<< matched_rectangles.size()<< " elements" << endl;
 
-	
-	Homography_transformation input;
-	input.source_image = first_frame;
-	input.target_image = Image<Vec3b>(imread(above_image_path));
-	input.homography_matrix = homography;
+	// Plot points on the top view
 	cout << "Starting video homography" << endl;
-	video_homography(VIDEO_FILE_PATH, matched_rectangles, &input);
-
-
+	video_homography(VIDEO_FILE_PATH, matched_rectangles, homography, Image<Vec3b>(imread(above_image_path)));
+	cout << "Finished" << endl;
 
 	waitKey();
 	return 0;
