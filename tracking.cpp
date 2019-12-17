@@ -1,7 +1,6 @@
 #include "tracking.h"
 
-// string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/Basket.mp4";
-float AREA_OVERLAP_THRESHOLD = 0.5;
+float AREA_OVERLAP_THRESHOLD = 0.2;
 float AREA_INCLUSION_THRESHOLD = 0.8;
 
 bool overlap(Rect new_rectangle, vector<Rect> tracking_rectangles)
@@ -26,13 +25,16 @@ vector<Rect> choose_rectangles(vector<Rect> &frame_detected_rectangles, vector<R
 	for (int detected_index = 0; detected_index < frame_detected_rectangles.size(); detected_index++)
 	{
 		Rect detected_rectangle = frame_detected_rectangles[detected_index];
+		// A priori, newly detected rectangles matches a new player  
 		bool new_player = true;
+		// For each detected rectangle, test if it overlaps with an already matched rectangle
 		for (int tracking_index = 0; tracking_index < frame_tracking_rectangles.size(); tracking_index++)
 		{
 			Rect tracking_rectangle = frame_tracking_rectangles[tracking_index];
 			Rect intersection = tracking_rectangle & detected_rectangle;
 			if (intersection.area() < AREA_OVERLAP_THRESHOLD * min(detected_rectangle.area(), tracking_rectangle.area() )) continue;
 			new_player = false;
+			// If it's included in an already matched rectangle, replace the latter
 			if (intersection.area() > AREA_INCLUSION_THRESHOLD * detected_rectangle.area()){
 				matched_rectangles[tracking_index] = detected_rectangle;
 			}
@@ -40,6 +42,7 @@ vector<Rect> choose_rectangles(vector<Rect> &frame_detected_rectangles, vector<R
 		if (new_player)
 			new_rectangles.push_back(detected_rectangle);
 	}
+	// newly matched rectangles = new player rectangles + updated previously matched rectangles
 	matched_rectangles.insert(matched_rectangles.end(), new_rectangles.begin(), new_rectangles.end());
 	return matched_rectangles;
 }
@@ -56,30 +59,6 @@ vector<Ptr<TrackerCSRT>> initialize_trackers(vector<Rect> &matched_rectangles, M
 	return player_trackers;
 }
 
-// void add_trackers(vector<Rect> &frame_detected_rectangles, vector<Rect> &matched_rectangles, vector<Ptr<TrackerCSRT>> &player_trackers, Mat &frame)
-// {
-// 	for (auto iterator = frame_detected_rectangles.begin(); iterator != frame_detected_rectangles.end(); iterator++)
-// 	{
-// 		Ptr<TrackerCSRT> tracker = TrackerCSRT::create();
-// 		tracker->init(frame, *(iterator));
-// 		if (player_trackers.size() == 0)
-// 		{
-// 			cout << "no matched rectangles" << endl;
-// 			player_trackers.push_back(tracker);
-// 			matched_rectangles.push_back(*(iterator));
-// 			cout << "Matched rectangles count : " << matched_rectangles.size() << endl;
-// 			cout << "detected rectangles count : " << frame_detected_rectangles.size() << endl;
-// 			return;
-// 		}
-// 		if (!overlap(*(iterator), matched_rectangles))
-// 		{
-// 			Ptr<TrackerCSRT> tracker = TrackerCSRT::create();
-// 			tracker->init(frame, *(iterator));
-// 			player_trackers.push_back(tracker);
-// 			matched_rectangles.push_back(*(iterator));
-// 		}
-// 	}
-// }
 
 void record_tracking_rectangles(string VIDEO_FILE_PATH, vector<vector<Rect>> &detected_rectangles, vector<vector<Rect>> &matched_rectangles)
 {
@@ -94,7 +73,7 @@ void record_tracking_rectangles(string VIDEO_FILE_PATH, vector<vector<Rect>> &de
 	vector<Rect> frame_detected_rectangles = detected_rectangles[0];
 	// if (frame_detected_rectangles.size() == 0)
 	// {
-	// 	cout << "No rectangles for initital tracking, please select one." << endl;
+	// 	cout << "No rectangles found to inititalize tracking, please select one." << endl;
 	// 	Rect window = selectROI("select tracker", frame);
 	// 	frame_detected_rectangles.push_back(window);
 	// 	destroyWindow("select tracker");
@@ -247,27 +226,3 @@ void record_detection_rectangles(string video_file_path, vector<vector<Rect>> &d
 	video.release();
 	destroyWindow("HOG detection");
 }
-
-// int main()
-// {
-// 	VideoCapture video(VIDEO_FILE_PATH);
-
-// 	// Check if camera opened successfully
-// 	if (!video.isOpened())
-// 	{
-// 		cout << "Error opening video stream or file" << endl;
-// 		return -1;
-// 	};
-
-// 	int frame_count = video.get(CAP_PROP_FRAME_COUNT);
-// 	cout << "Video of " << frame_count << " frames loaded" << endl;
-// 	vector<vector<Rect>> detected_rectangles;
-// 	vector<vector<Rect>> tracking_rectangles;
-
-// 	record_detected_rectangles(VIDEO_FILE_PATH, detected_rectangles);
-// 	int rectangle_count = detected_rectangles[10].size();
-
-// 	record_tracking_rectangles(VIDEO_FILE_PATH, detected_rectangles, tracking_rectangles);
-
-// 	// cout << "number of rectangles for frame " << 10 << " : " << rectangle_count << endl;
-// }

@@ -254,6 +254,7 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 		imshow("foreground mask", foregroundMask);
 		imshow("foreground image", foregroundImgWithRect);
 
+		// waitKey();
 		if (waitKey(25) == 27)break;
 
 		if (!backgroundImage.empty()) {

@@ -1,9 +1,13 @@
-#include "homographie.h"
+#include "homography.h"
 #include "tracking.h"
 #include "detection.h"
+#include "player.cpp"
 
 string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/short.mp4";
+// string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis2.mp4";
+// string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis_short.mp4";
 string above_image_path = "../input/images/pitch_resized.png";
+// string above_image_path = "../input/images/tennis_top.jpg";
 string photo_path = "../input/images/photo.jpg";
 
 
@@ -29,21 +33,36 @@ int main()
 	matches.source_image = source_image;
 	matches.target_image = target_image;
 	imshow("source", source_image);
-	imshow("target", target_image);
-	cout << "Point and click to set homographic pairs, then press any key to proceed." << endl;
-	setMouseCallback("source", add_point_source, &matches);
-	setMouseCallback("target", add_point_target, &matches);
+	// imshow("target", target_image);
+	// cout << "Point and click to set homographic pairs, then press any key to proceed." << endl;
+	// setMouseCallback("source", add_point_source, &matches);
+	// setMouseCallback("target", add_point_target, &matches);
+	// waitKey();
+	// destroyWindow("source");
+	// destroyWindow("target");
+	// cout << "Building homography" << endl;
+	// Mat homography = findHomography(matches.source_points, matches.target_points);
+	Mat homography;
+
+	// Delimit pitch area by pointing and clicking
+
+	// Select a player	
+	cout << "Select a player" << endl;
+	matches.player = selectROI("select tracker", source_image);
+	int typical_height = matches.player.height;
+
+
+
+	// Select colours
+	cout << "Point and click to select a color, press space to add, press a key validate." << endl;
+	setMouseCallback("source", select_colour, &matches);
 	waitKey();
-	destroyWindow("source");
-	destroyWindow("target");
-	cout << "Building homography" << endl;
-	Mat homography = findHomography(matches.source_points, matches.target_points);
-	// Mat homography;
+	cout << "Number of colours : " << matches.colours.size() << endl;
 
 	// Player detection
 	vector<vector<Rect>> detected_rectangles;
 	vector<vector<Rect>> matched_rectangles;
-	int history = 30, sizeMinRect = 60, sizeMaxRect = 150, gaussianSize = 7, sizeBlobMin = 300, blobInt = 0;
+	int history = 5, sizeMinRect = 0.5*typical_height, sizeMaxRect = 1.5*typical_height, gaussianSize = 5, sizeBlobMin = 300, blobInt = 0;
 	float threshold = 0.5;
 	string technic = "a";
 	cout << "Detecting rectangles" << endl;

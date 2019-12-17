@@ -1,4 +1,4 @@
-#include "homographie.h"
+#include "homography.h"
 
 void add_point_source(int event, int x, int y, int foo, void *data)
 {
@@ -99,4 +99,21 @@ void video_homography(string video_file_path, vector<vector<Rect>> &tracking_rec
 		waitKey();
 	}
 	video.release();
+}
+
+void select_colour(int event, int x, int y, int foo, void *data)
+{
+    if (event != EVENT_LBUTTONDOWN)
+        return;
+	
+    Matches *matches = (Matches *)data;
+    Vec3b colour = matches->source_image(x, y);
+	circle(matches->source_image, Point(x,y), 7, (Scalar)colour, 4);
+	imshow("source", matches->source_image);
+	cout << "selected colour : " << matches->source_image(x, y) << endl;
+	if (waitKey() == 32) {
+		matches->colours.push_back(colour);
+		cout << "Added colour : " << matches->source_image(x, y) << endl;
+	}
+
 }
