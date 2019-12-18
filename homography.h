@@ -18,6 +18,13 @@ struct Matches
 	vector<Point2f> source_points;
 	Image<Vec3b> target_image;
 	vector<Point2f> target_points;
+	vector<Vec3b> colours;
+	Rect player;
+};
+struct pitch
+{
+	Image<Vec3b> source_image;
+	vector<Point> polygon_points;
 };
 
 void add_point_source(int event, int x, int y, int foo, void *data);
@@ -25,3 +32,4 @@ void add_point_target(int event, int x, int y, int foo, void *data);
 Point homographic_transformation(const Mat &homography_matrix, Point input_point);
 void draw_homographic_pair(Point point, Mat homography_matrix, Image<Vec3b> source_image, Image<Vec3b> target_image);
 void video_homography(string video_file_path, vector<vector<Rect>> &tracking_rectangles, Mat homography_matrix, Image<Vec3b> target_image);
+void select_colour(int event, int x, int y, int foo, void *data);
