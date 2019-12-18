@@ -1,8 +1,8 @@
 #include "homographie.h"
-#include "tracking.h"
+//#include "tracking.h"
 #include "detection.h"
 
-string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/short.mp4";
+string VIDEO_FILE_PATH = "../input/videos/ShortBasket.mp4";
 string above_image_path = "../input/images/pitch_resized.png";
 string photo_path = "../input/images/photo.jpg";
 
@@ -53,9 +53,9 @@ int main()
 	cout << "Detecting rectangles for " << detected_rectangles.size() << " frames" << endl;
 
 	// Player tracking
-	record_tracking_rectangles(VIDEO_FILE_PATH, detected_rectangles, matched_rectangles);
-	cout << "Tracking complete" << endl;
-	cout << "Tracking vector has "<< matched_rectangles.size()<< " elements" << endl;
+	//record_tracking_rectangles(VIDEO_FILE_PATH, detected_rectangles, matched_rectangles);
+	//cout << "Tracking complete" << endl;
+	//cout << "Tracking vector has "<< matched_rectangles.size()<< " elements" << endl;
 
 	// Plot points on the top view
 	cout << "Starting video homography" << endl;

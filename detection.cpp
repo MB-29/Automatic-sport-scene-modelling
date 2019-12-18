@@ -145,7 +145,7 @@ void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs
 	}
 }
 
-void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<Rect>> &frame_rectangles, string technic, int history, int sizeMinRect, int sizeMaxRect, int sizeMinBlob, bool blob, int gaussianSize, int seuil)
+void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<Rect>> &frame_rectangles, string technic, int history, int sizeMinRect, int sizeMaxRect, int sizeMinBlob, bool blob, int gaussianSize, int seuil, Vec3f jersey1, Vec3f jersey2)
 {
 
 	// Init background substractor
