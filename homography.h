@@ -20,6 +20,8 @@ struct Matches
 	vector<Point2f> target_points;
 	vector<Vec3b> colours;
 	Rect player;
+	Point pitch[4];
+	int pitch_points_count;
 };
 struct pitch
 {
@@ -33,3 +35,4 @@ Point homographic_transformation(const Mat &homography_matrix, Point input_point
 void draw_homographic_pair(Point point, Mat homography_matrix, Image<Vec3b> source_image, Image<Vec3b> target_image);
 void video_homography(string video_file_path, vector<vector<Rect>> &tracking_rectangles, Mat homography_matrix, Image<Vec3b> target_image);
 void select_colour(int event, int x, int y, int foo, void *data);
+void add_pitch_point(int event, int x, int y, int foo, void *data);

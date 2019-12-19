@@ -117,3 +117,22 @@ void select_colour(int event, int x, int y, int foo, void *data)
 	}
 
 }
+
+void add_pitch_point(int event, int x, int y, int foo, void *data)
+{
+	Matches *matches = (Matches *)data;
+
+	if (event != EVENT_LBUTTONDOWN || matches->pitch_points_count == 4)
+		return;
+	
+	int count = matches->pitch_points_count;
+	Point point = Point(x, y);
+	circle(matches->source_image, point, 2, Scalar(255, 255, 255), 2);
+	cout << "Last point : " << matches->pitch[count] << endl;
+	if (count > 0) line(matches->source_image, matches->pitch[count], point, Scalar(0,0,255), 2);
+	putText(matches->source_image, to_string(count), point, FONT_HERSHEY_PLAIN, 2, 2);
+	imshow("source", matches->source_image);
+	matches->pitch[count] = point;
+	matches->pitch_points_count = count + 1;
+	cout << "size of pitch points : " << count << endl;
+}
