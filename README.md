@@ -2,7 +2,7 @@
 
 ## Input 
 Sport scene video, with fixed camera
-![input](demo/input.jpg)
+![input](demo/input.png)
 ## Pipeline
 * Calibrating : compute homography
 * Detect players by foreground detection
@@ -10,4 +10,4 @@ Sport scene video, with fixed camera
 * Project players on top view image by applying homography
 
 ## Output
-![ouput](demo/output.jpg)
+![ouput](demo/output.png)
