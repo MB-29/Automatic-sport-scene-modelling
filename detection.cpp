@@ -1,5 +1,6 @@
 #include "detection.h"
 #include "rectangles.h"
+#include "homography.h"
 
 
 float WEIGHT_THRESHOLD = 0.7;
@@ -120,6 +121,23 @@ void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs
 	blobs.clear();
 	rects.clear();
 
+	Mat_<double> homography_matrix(3, 3);
+	homography_matrix.at<double>(0, 0) = 1;
+	homography_matrix.at<double>(0, 1) = 0;
+	homography_matrix.at<double>(0, 2) = 0;
+	homography_matrix.at<double>(1, 0) = 0;
+	homography_matrix.at<double>(1, 1) = 1;
+	homography_matrix.at<double>(1, 2) = 0;
+	homography_matrix.at<double>(2, 0) = 0;
+	homography_matrix.at<double>(2, 1) = 0;
+	homography_matrix.at<double>(2, 2) = 1;
+
+	Rect field;
+	field.x = 10;
+	field.y = 10;
+	field.height = 100;
+	field.width = 100;
+
 	int c = colorMasks.size();
 
 	Mat_<int> distColor(c, 1, CV_32FC1);
@@ -164,28 +182,38 @@ void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs
 				// loDiff (maximal lower diff to connect), upDiff (maximal upper diff to connect), $rect : output minimal bounding rectangle
 				// last arguments : 4 if only 4 neighbours checked ; 8 is 8 of them
 				std::vector<Point> blob;
-				for (int i = rect.y; i < (rect.y + rect.height); i++) {
-					for (int j = rect.x; j < (rect.x + rect.width); j++) {						
-						if ((int)label_image.at<int>(i, j) != (int)label_image_old.at<int>(i,j) ){
-							blob.push_back(cv::Point(j, i));
-							for (int l = 0; l < c; l++) {
-								distColor.at<int>(l, 0) += colorMasks[l].at<uchar>(i, j);
+				Point upLeft = homographic_transformation(homography_matrix, Point(rect.x, rect.y + rect.height));
+				Point upRight = homographic_transformation(homography_matrix, Point(rect.x+rect.width, rect.y + rect.height));
+				Point downLeft = homographic_transformation(homography_matrix, Point(rect.x, rect.y));
+				Point downRight = homographic_transformation(homography_matrix, Point(rect.x + rect.width, rect.y));
+				cout << upLeft << upRight << downLeft << downRight << endl;
+				int midVertical = (upLeft.y + upRight.y + downLeft.y + downRight.y) / 4;
+				int midHorizontal = (upLeft.x + upRight.x + downLeft.x + downRight.x) / 4;
+				// On ne fait les vérifications sur le rectangle que s'il son centre est dans la zone du terrain de jeu
+				if ((midVertical > field.y) && (midVertical < field.y + field.height) && (midHorizontal > field.x) && (midHorizontal < field.x + field.width)) {
+					for (int i = rect.y; i < (rect.y + rect.height); i++) {
+						for (int j = rect.x; j < (rect.x + rect.width); j++) {
+							if ((int)label_image.at<int>(i, j) != (int)label_image_old.at<int>(i, j)) {
+								blob.push_back(cv::Point(j, i));
+								for (int l = 0; l < c; l++) {
+									distColor.at<int>(l, 0) += colorMasks[l].at<uchar>(i, j);
+								}
 							}
 						}
 					}
-				}
 
-				if (((blobFlag)&& (blob.size() > sizeMinBlob))||(!blobFlag)) {
- 					if ((rect.height > sizeMinRect) && (rect.height < sizeMaxRect)) {
-						blobs.push_back(blob);
-						rects.push_back(rect);
-						int iColorMaj = 0;
-						for (int l = 0; l < c; l++) {
-							if (distColor.at<int>(l, 0) > distColor.at<int>(iColorMaj, 0)) {
-								iColorMaj = l;
+					if (((blobFlag) && (blob.size() > sizeMinBlob)) || (!blobFlag)) {
+						if ((rect.height > sizeMinRect) && (rect.height < sizeMaxRect)) {
+							blobs.push_back(blob);
+							rects.push_back(rect);
+							int iColorMaj = 0;
+							for (int l = 0; l < c; l++) {
+								if (distColor.at<int>(l, 0) > distColor.at<int>(iColorMaj, 0)) {
+									iColorMaj = l;
+								}
 							}
+							rectsColors.push_back(colors[iColorMaj]);
 						}
-						rectsColors.push_back(colors[iColorMaj]);
 					}
 				}
 

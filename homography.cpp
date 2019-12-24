@@ -33,6 +33,7 @@ Point homographic_transformation(const Mat &homography_matrix, Point input_point
 {
 	Vec3d input_point_3D(input_point.x, input_point.y, 1);
 	cout << " computing homographic output" << endl;
+	cout << (Mat)input_point_3D << homography_matrix << endl;
 	Mat output = homography_matrix * ((Mat)input_point_3D);
 	double u = output.at<double>(0, 0);
 	double v = output.at<double>(0, 1);
