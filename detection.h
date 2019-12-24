@@ -24,5 +24,6 @@ using namespace cv;
 
 void moyenneMask(Mat &Moy, string filename);
 void initializeMask(Mat &foregroundMask, const Mat &frame, const Mat &Moy, int seuil);
-void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs, std::vector < cv::Rect> &rects, int sizeMinRect, int sizeMaxRect, int sizeBlobMin, bool blob);
-void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<Rect>> &frame_rectangles, string technic, int history, int sizeMinRect, int sizeMaxRect, int sizeBlobMin, bool blob, int gaussianSize, int seuil);
+void colorMask(const Mat &img, const Mat&foreground, Mat &rst, vector<Vec3b> colors, float icolor);
+void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs, std::vector < cv::Rect> &rects, std::vector <Vec3b> &rectsColors, int sizeMinRect, int sizeMaxRect, int sizeMinBlob, bool blobFlag, vector<Mat> colorMasks, vector<Vec3b> colors);
+void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<Rect>> &frame_rectangles, vector<vector<Vec3b>> &frame_colors, string technic, int history, int sizeMinRect, int sizeMaxRect, int sizeMinBlob, bool blob, int gaussianSize, float seuil, vector<Vec3b> colorsJerseys);
