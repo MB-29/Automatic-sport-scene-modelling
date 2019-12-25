@@ -1,5 +1,6 @@
-#include "homographie.h"
+#include "homography.h"
 
+// Homographic pairs
 void add_point_source(int event, int x, int y, int foo, void *data)
 {
 	if (event != EVENT_LBUTTONDOWN)
@@ -50,6 +51,7 @@ void draw_homographic_pair(Point point, Mat homography_matrix, Image<Vec3b> sour
 	imshow("target", target_image);
 }
 
+// Plot player points on top view
 void video_homography(string video_file_path, vector<vector<Rect>> &tracking_rectangles, Mat homography_matrix, Image<Vec3b> target_image)
 {
 	// Load video and initialize
@@ -99,4 +101,41 @@ void video_homography(string video_file_path, vector<vector<Rect>> &tracking_rec
 		waitKey();
 	}
 	video.release();
+}
+
+// Select jersey colourss
+void select_colour(int event, int x, int y, int foo, void *data)
+{
+    if (event != EVENT_LBUTTONDOWN)
+        return;
+	
+    Matches *matches = (Matches *)data;
+    Vec3b colour = matches->source_image(x, y);
+	circle(matches->source_image, Point(x,y), 7, (Scalar)colour, 4);
+	imshow("source", matches->source_image);
+	cout << "selected colour : " << matches->source_image(x, y) << endl;
+	if (waitKey() == 32) {
+		matches->colours.push_back(colour);
+		cout << "Added colour : " << matches->source_image(x, y) << endl;
+	}
+
+}
+
+// Delimit the pitch
+void add_pitch_point(int event, int x, int y, int foo, void *data)
+{
+	Matches *matches = (Matches *)data;
+
+	if (event != EVENT_LBUTTONDOWN || matches->pitch_points_count == 4)
+		return;
+	int count = matches->pitch_points_count;
+	Point point = Point(x, y);
+	circle(matches->source_image, point, 2, Scalar(255, 255, 255), 2);
+	if (count > 0) line(matches->source_image, matches->pitch[count-1], point, Scalar(0,0,255), 2);
+	putText(matches->source_image, to_string(count), point, FONT_HERSHEY_PLAIN, 2, 2);
+	imshow("source", matches->source_image);
+	matches->pitch[count] = point;
+	cout << "Added point : " << matches->pitch[count] << endl;
+	matches->pitch_points_count = count + 1;
+
 }
