@@ -1,12 +1,18 @@
+
 #include "homography.h"
-#include "tracking.h"
+//#include "tracking.h"
 #include "detection.h"
 
-// string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/short.mp4";
-string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis2.mp4";
+
+string VIDEO_FILE_PATH = "../input/videos/ShortBasket.mp4";
+
+//string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/short.mp4";
+// string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis2.mp4";
 // string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis_short.mp4";
-// string above_image_path = "../input/images/pitch_resized.png";
-string above_image_path = "../input/images/tennis_top.jpg";
+
+string above_image_path = "../input/images/pitch_resized.png";
+// string above_image_path = "../input/images/tennis_top.jpg";
+
 string photo_path = "../input/images/photo.jpg";
 
 
@@ -60,6 +66,7 @@ int main()
 	cout << "Select a player" << endl;
 	matches.player = selectROI("select tracker", source_image);
 	int typical_height = matches.player.height;
+	//int typical_height = 100;
 
 
 	// Select colours
@@ -70,11 +77,13 @@ int main()
 
 	// Player detection
 	vector<vector<Rect>> detected_rectangles;
+	vector<vector<Vec3b>> detected_rectangles_color;
+
 	int history = 5, sizeMinRect = 0.5*typical_height, sizeMaxRect = 1.5*typical_height, gaussianSize = 5, sizeBlobMin = 300, blobInt = 0;
 	float threshold = 0.5;
 	string technic = "a";
 	cout << "Detecting rectangles" << endl;
-	record_backgroundsubstract_rectangles(VIDEO_FILE_PATH, detected_rectangles, technic, history, sizeMinRect, sizeMaxRect, sizeBlobMin, blobInt, gaussianSize, threshold);
+	record_backgroundsubstract_rectangles(VIDEO_FILE_PATH, detected_rectangles, detected_rectangles_color, technic, history, sizeMinRect, sizeMaxRect, sizeBlobMin, blobInt, gaussianSize, threshold, matches.colours);
 	// record_detection_rectangles(VIDEO_FILE_PATH, detected_rectangles);
 	cout << "Detection complete" << endl;
 	cout << "Detecting rectangles for " << detected_rectangles.size() << " frames" << endl;
@@ -83,10 +92,12 @@ int main()
 	detected_rectangles = filter_rectangles(detected_rectangles, matches.pitch);
 
 	// Player tracking
+
 	vector<vector<Rect>> matched_rectangles;
-	record_tracking_rectangles(VIDEO_FILE_PATH, detected_rectangles, matched_rectangles);
-	cout << "Tracking complete" << endl;
-	cout << "Tracking vector has "<< matched_rectangles.size()<< " elements" << endl;
+	//record_tracking_rectangles(VIDEO_FILE_PATH, detected_rectangles, matched_rectangles);
+	//cout << "Tracking complete" << endl;
+	//cout << "Tracking vector has "<< matched_rectangles.size()<< " elements" << endl;
+
 
 	// Plot points on the top view
 	cout << "Starting video homography" << endl;

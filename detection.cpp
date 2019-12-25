@@ -1,5 +1,8 @@
 #include "detection.h"
 #include "polygon.cpp"
+#include "rectangles.h"
+#include "homography.h"
+
 
 float WEIGHT_THRESHOLD = 0.7;
 // string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/short.mp4";
@@ -53,7 +56,7 @@ void moyenneMask(Mat &Moy, string filename)
 	capInit.release();
 }
 
-void initializeMask(Mat &foregroundMask, const Mat &frame, const Mat &Moy, int seuil)
+void initializeMask(Mat &foregroundMask, const Mat &frame, const Mat &Moy, float seuil)
 {
 	Image<Vec3f> imgFloat;
 	frame.convertTo(imgFloat, CV_32F, 1 / 255.0);
@@ -75,10 +78,56 @@ void initializeMask(Mat &foregroundMask, const Mat &frame, const Mat &Moy, int s
 	}
 }
 
-void labelBlobs(const cv::Mat &binary, std::vector<std::vector<Point>> &blobs, std::vector<cv::Rect> &rects, int sizeMinRect, int sizeMaxRect, int sizeMinBlob, bool blobFlag)
+void colorMask(const Mat &img, const Mat&foreground, std::vector<Mat> &rst, vector<Vec3b> colors) {
+	
+	if (!rst.empty()) {
+		rst.clear();
+	}
+	Image<Vec3b> imgHSV;
+	int c = colors.size();
+	Mat_<Vec3b> matColorBGR(1, colors.size());
+	Mat_<Vec3b> matColorHSV(1, colors.size());
+	for (int r = 0; r < c; r++) {
+		matColorBGR.at<Vec3b>(0, r) = colors[r] ;
+	}
+	cvtColor(matColorBGR, matColorHSV, COLOR_BGR2HSV);
+	cvtColor(img, imgHSV, COLOR_BGR2HSV);
+	int n = imgHSV.cols;
+	int m = imgHSV.rows;
+
+	for (int r = 0; r < c; r++) {
+		Mat maskUnit;
+		maskUnit.create(img.size(), CV_8U);
+		for (int i = 0; i < m; i++) {
+			for (int j = 0; j < n; j++) {
+				if (foreground.at<uchar>(i, j) == 255) {
+					
+					maskUnit.at<uchar>(i, j) += (int)(norm(imgHSV.at<Vec3b>(i, j), matColorHSV.at<Vec3b>(0, r), NORM_L2));
+				}
+				else {
+					maskUnit.at<uchar>(i, j) = 0;
+				}
+
+			}
+		}
+		rst.push_back(maskUnit);
+	}
+}
+
+
+void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs, std::vector < cv::Rect> &rects, std::vector <Vec3b> &rectsColors, int sizeMinRect, int sizeMaxRect, int sizeMinBlob, bool blobFlag, vector<Mat> colorMasks, vector<Vec3b> colors)
 {
 	blobs.clear();
 	rects.clear();
+
+	int c = colorMasks.size();
+
+	Mat_<int> distColor(c, 1, CV_32FC1);
+
+	for (int l = 0; l < c; l++) {
+		distColor.at<int>(l, 0) = 0;
+	}
+
 
 	// Using labels from 2+ for each blob
 	cv::Mat label_image, label_image_old, mask;
@@ -100,6 +149,7 @@ void labelBlobs(const cv::Mat &binary, std::vector<std::vector<Point>> &blobs, s
 	}
 	label_image.copyTo(label_image_old);
 
+
 	int label_count = 2; // starts at 2 because 0,1 are used already
 	int m = label_image.rows;
 	int n = label_image.cols;
@@ -116,34 +166,33 @@ void labelBlobs(const cv::Mat &binary, std::vector<std::vector<Point>> &blobs, s
 				// loDiff (maximal lower diff to connect), upDiff (maximal upper diff to connect), $rect : output minimal bounding rectangle
 				// last arguments : 4 if only 4 neighbours checked ; 8 is 8 of them
 				std::vector<Point> blob;
+
 				for (int i = rect.y; i < (rect.y + rect.height); i++)
 				{
 					for (int j = rect.x; j < (rect.x + rect.width); j++)
 					{
 						if ((int)label_image.at<int>(i, j) != (int)label_image_old.at<int>(i, j))
 						{
+
 							blob.push_back(cv::Point(j, i));
+							for (int l = 0; l < c; l++) {
+								distColor.at<int>(l, 0) += colorMasks[l].at<uchar>(i, j);
+							}
 						}
 					}
 				}
 
-				if (blobFlag)
-				{
-					if (blob.size() > sizeMinBlob)
-					{
-						if ((rect.height > sizeMinRect) && (rect.height < sizeMaxRect))
-						{
-							blobs.push_back(blob);
-							rects.push_back(rect);
-						}
-					}
-				}
-				else
-				{
-					if ((rect.height > sizeMinRect) && (rect.height < sizeMaxRect))
-					{
+				if (((blobFlag) && (blob.size() > sizeMinBlob)) || (!blobFlag)) {
+					if ((rect.height > sizeMinRect) && (rect.height < sizeMaxRect)) {
 						blobs.push_back(blob);
 						rects.push_back(rect);
+						int iColorMaj = 0;
+						for (int l = 0; l < c; l++) {
+							if (distColor.at<int>(l, 0) > distColor.at<int>(iColorMaj, 0)) {
+								iColorMaj = l;
+							}
+						}
+						rectsColors.push_back(colors[iColorMaj]);
 					}
 				}
 
@@ -154,7 +203,7 @@ void labelBlobs(const cv::Mat &binary, std::vector<std::vector<Point>> &blobs, s
 	}
 }
 
-void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<Rect>> &frame_rectangles, string technic, int history, int sizeMinRect, int sizeMaxRect, int sizeMinBlob, bool blob, int gaussianSize, int seuil)
+void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<Rect>> &frame_rectangles, vector<vector<Vec3b>> &frame_colors, string technic, int history, int sizeMinRect, int sizeMaxRect, int sizeMinBlob, bool blob, int gaussianSize, float seuil, vector<Vec3b> colorsJerseys)
 {
 
 	// Init background substractor
@@ -166,6 +215,7 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 
 	// Create empty input img, foreground and background image and foreground mask.
 	Mat img, foregroundMask, backgroundImage, foregroundImg;
+	vector<Mat> clrMasks;
 
 	Image<Vec3f> Moy;
 
@@ -217,34 +267,49 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 			initializeMask(foregroundMask, img, Moy, seuil);
 		}
 
+	
+		colorMask(img, foregroundMask, clrMasks, colorsJerseys);
+
 		// smooth the mask to reduce noise in image
 		//GaussianBlur(foregroundMask, foregroundMask, Size(11, 11), 3.5, 3.5);
+
 		GaussianBlur(foregroundMask, foregroundMask, Size(gaussianSize, gaussianSize), 3.5, 3.5);
 
+	
 		// threshold mask to saturate at black and white values
 		threshold(foregroundMask, foregroundMask, 10, 255, THRESH_BINARY);
+
 		// create black foreground image
 		foregroundImg = Scalar::all(0);
+	
 		// Copy source image to foreground image only in area with white mask
 		img.copyTo(foregroundImg, foregroundMask);
 
 		//Get background image
 		bg_model->getBackgroundImage(backgroundImage);
 
+
 		std::vector<std::vector<Point>> blobs;
-		std::vector<cv::Rect> rects;
+		std::vector< cv::Rect > rects;
+		std::vector<Vec3b> rectsColor;
+
 		cv::Mat binary;
-		labelBlobs(foregroundMask, blobs, rects, sizeMinRect, sizeMaxRect, sizeMinBlob, blob);
+		labelBlobs(foregroundMask, blobs, rects, rectsColor, sizeMinRect, sizeMaxRect, sizeMinBlob, blob, clrMasks, colorsJerseys);
+
+
 
 		Mat foregroundImgWithRect;
 
 		foregroundImg.copyTo(foregroundImgWithRect);
 
 		frame_rectangles.push_back(rects);
+		frame_colors.push_back(rectsColor);
+
 
 		for (int k = 0; k < rects.size(); k++)
 		{
-			rectangle(foregroundImgWithRect, rects[k], cv::Scalar(255, 255, 255), 3);
+			rectangle(foregroundImgWithRect, rects[k], rectsColor[k], 3);
+
 		}
 
 		// Show the results
