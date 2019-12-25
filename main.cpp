@@ -1,13 +1,12 @@
 #include "homography.h"
 #include "tracking.h"
 #include "detection.h"
-#include "player.cpp"
 
-string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/short.mp4";
-// string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis2.mp4";
+// string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/short.mp4";
+string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis2.mp4";
 // string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis_short.mp4";
-string above_image_path = "../input/images/pitch_resized.png";
-// string above_image_path = "../input/images/tennis_top.jpg";
+// string above_image_path = "../input/images/pitch_resized.png";
+string above_image_path = "../input/images/tennis_top.jpg";
 string photo_path = "../input/images/photo.jpg";
 
 
@@ -47,16 +46,20 @@ int main()
 	Mat homography;
 
 	// Delimit pitch area by pointing and clicking
-	cout << "Point and click to delimit the pitch, press any key to validate." << endl;
+	cout << "Point and click to delimit the pitch, press ENTER to validate." << endl;
+	matches.pitch_points_count = 0;
 	setMouseCallback("source", add_pitch_point, &matches);
-	waitKey();
-
+	if (waitKey()==32){
+		if (matches.pitch_points_count < 4){
+			cout << "Error : pitch must be delimited by exactly 4 points" << endl;
+			return 1;
+		}
+	};
 
 	// Select a player	
 	cout << "Select a player" << endl;
 	matches.player = selectROI("select tracker", source_image);
 	int typical_height = matches.player.height;
-
 
 
 	// Select colours
@@ -67,7 +70,6 @@ int main()
 
 	// Player detection
 	vector<vector<Rect>> detected_rectangles;
-	vector<vector<Rect>> matched_rectangles;
 	int history = 5, sizeMinRect = 0.5*typical_height, sizeMaxRect = 1.5*typical_height, gaussianSize = 5, sizeBlobMin = 300, blobInt = 0;
 	float threshold = 0.5;
 	string technic = "a";
@@ -77,7 +79,11 @@ int main()
 	cout << "Detection complete" << endl;
 	cout << "Detecting rectangles for " << detected_rectangles.size() << " frames" << endl;
 
+	// Filter rectangles
+	detected_rectangles = filter_rectangles(detected_rectangles, matches.pitch);
+
 	// Player tracking
+	vector<vector<Rect>> matched_rectangles;
 	record_tracking_rectangles(VIDEO_FILE_PATH, detected_rectangles, matched_rectangles);
 	cout << "Tracking complete" << endl;
 	cout << "Tracking vector has "<< matched_rectangles.size()<< " elements" << endl;
