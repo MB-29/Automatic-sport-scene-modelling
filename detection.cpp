@@ -4,6 +4,7 @@
 #include "homography.h"
 
 
+
 float WEIGHT_THRESHOLD = 0.7;
 // string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/short.mp4";
 
@@ -115,7 +116,7 @@ void colorMask(const Mat &img, const Mat&foreground, std::vector<Mat> &rst, vect
 }
 
 
-void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs, std::vector < cv::Rect> &rects, std::vector <Vec3b> &rectsColors, int sizeMinRect, int sizeMaxRect, int sizeMinBlob, bool blobFlag, vector<Mat> colorMasks, vector<Vec3b> colors)
+void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs, std::vector < cv::Rect> &rects, std::vector <Vec3b> &rectsColors, Detection_param param, vector<Mat> colorMasks, vector<Vec3b> colors)
 {
 	blobs.clear();
 	rects.clear();
@@ -182,8 +183,8 @@ void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs
 					}
 				}
 
-				if (((blobFlag) && (blob.size() > sizeMinBlob)) || (!blobFlag)) {
-					if ((rect.height > sizeMinRect) && (rect.height < sizeMaxRect)) {
+				if (((param.blobFlag) && (blob.size() > param.sizeMinBlob)) || (!param.blobFlag)) {
+					if ((rect.height > param.sizeMinRect) && (rect.height < param.sizeMaxRect)) {
 						blobs.push_back(blob);
 						rects.push_back(rect);
 						int iColorMaj = 0;
@@ -203,14 +204,14 @@ void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs
 	}
 }
 
-void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<Rect>> &frame_rectangles, vector<vector<Vec3b>> &frame_colors, string technic, int history, int sizeMinRect, int sizeMaxRect, int sizeMinBlob, bool blob, int gaussianSize, float seuil, vector<Vec3b> colorsJerseys)
+void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<Rect>> &frame_rectangles, vector<vector<Vec3b>> &frame_colors, Detection_param param, vector<Vec3b> colorsJerseys)
 {
 
 	// Init background substractor
 
 	//Ptr<BackgroundSubtractorMOG2> bg_model = createBackgroundSubtractorMOG2(history, 16, true).dynamicCast<BackgroundSubtractorMOG2>();
 	// Adjust automatically the number of K gaussian for the background mixture, history of (1) frames, threshold (2), detect Shaddows in grey (3) (mouaif)
-	Ptr<BackgroundSubtractorKNN> bg_model = createBackgroundSubtractorKNN(history, 400, true).dynamicCast<BackgroundSubtractorKNN>();
+	Ptr<BackgroundSubtractorKNN> bg_model = createBackgroundSubtractorKNN(param.history, 400, true).dynamicCast<BackgroundSubtractorKNN>();
 	// history of (1) frames (too much is worst), threshold (2), detect Shaddows in grey (3) (mouaif). Better, doesn't get excited that much at frames 40-50
 
 	// Create empty input img, foreground and background image and foreground mask.
@@ -219,7 +220,7 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 
 	Image<Vec3f> Moy;
 
-	if (seuil > 0)
+	if (param.threshold > 0)
 	{
 		moyenneMask(Moy, video_file_path);
 	}
@@ -261,10 +262,10 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 
 		//bg_model->apply(img, foregroundMask, 0.1);
 
-		if ((frame_index < 10) && (seuil > 0))
+		if ((frame_index < 10) && (param.threshold > 0))
 		{
 			foregroundMask.create(img.size(), CV_8U);
-			initializeMask(foregroundMask, img, Moy, seuil);
+			initializeMask(foregroundMask, img, Moy, param.threshold);
 		}
 
 	
@@ -273,7 +274,7 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 		// smooth the mask to reduce noise in image
 		//GaussianBlur(foregroundMask, foregroundMask, Size(11, 11), 3.5, 3.5);
 
-		GaussianBlur(foregroundMask, foregroundMask, Size(gaussianSize, gaussianSize), 3.5, 3.5);
+		GaussianBlur(foregroundMask, foregroundMask, Size(param.gaussianSize, param.gaussianSize), 3.5, 3.5);
 
 	
 		// threshold mask to saturate at black and white values
@@ -294,7 +295,7 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 		std::vector<Vec3b> rectsColor;
 
 		cv::Mat binary;
-		labelBlobs(foregroundMask, blobs, rects, rectsColor, sizeMinRect, sizeMaxRect, sizeMinBlob, blob, clrMasks, colorsJerseys);
+		labelBlobs(foregroundMask, blobs, rects, rectsColor, param, clrMasks, colorsJerseys);
 
 
 

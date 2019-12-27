@@ -31,6 +31,7 @@ int main()
 
 	// Initialize calibration
 	Matches matches;
+	Detection_param param;
 	Image<Vec3b> first_frame;
 	video >> first_frame;
 	Image<Vec3b> source_image = first_frame ;
@@ -79,11 +80,16 @@ int main()
 	vector<vector<Rect>> detected_rectangles;
 	vector<vector<Vec3b>> detected_rectangles_color;
 
-	int history = 5, sizeMinRect = 0.5*typical_height, sizeMaxRect = 1.5*typical_height, gaussianSize = 5, sizeBlobMin = 300, blobInt = 0;
-	float threshold = 0.5;
-	string technic = "a";
+	param.history = 5;
+	param.sizeMinRect = 0.5*typical_height;
+	param.sizeMaxRect = 1.5*typical_height;
+	param.gaussianSize = 5;
+	param.sizeMinBlob = 300;
+	param.blobFlag = false;
+	param.threshold = 0.5;
+	param.technic = "a";
 	cout << "Detecting rectangles" << endl;
-	record_backgroundsubstract_rectangles(VIDEO_FILE_PATH, detected_rectangles, detected_rectangles_color, technic, history, sizeMinRect, sizeMaxRect, sizeBlobMin, blobInt, gaussianSize, threshold, matches.colours);
+	record_backgroundsubstract_rectangles(VIDEO_FILE_PATH, detected_rectangles, detected_rectangles_color, param, matches.colours);
 	// record_detection_rectangles(VIDEO_FILE_PATH, detected_rectangles);
 	cout << "Detection complete" << endl;
 	cout << "Detecting rectangles for " << detected_rectangles.size() << " frames" << endl;

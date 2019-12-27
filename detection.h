@@ -15,6 +15,17 @@
 using namespace std;
 using namespace cv;
 
+struct Detection_param {
+	int sizeMinRect;
+	int sizeMaxRect;
+	int sizeMinBlob;
+	bool blobFlag;
+	string technic;
+	int history;
+	int gaussianSize;
+	float threshold;
+};
+
 
 //void initialize_trackers(vector<Rect2d> rectangles, vector<Ptr<TrackerCSRT>> &player_trackers, Mat &frame);
 // void record_hog_rectangles(string video_file_path, vector<vector<Rect>> &frame_rectangles);
@@ -26,5 +37,5 @@ void moyenneMask(Mat &Moy, string filename);
 void initializeMask(Mat &foregroundMask, const Mat &frame, const Mat &Moy, float seuil);
 vector<vector<Rect>> filter_rectangles(vector<vector<Rect>> &detection_rectangles, Point pitch[]);
 void colorMask(const Mat &img, const Mat&foreground, Mat &rst, vector<Vec3b> colors, float icolor);
-void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs, std::vector < cv::Rect> &rects, std::vector <Vec3b> &rectsColors, int sizeMinRect, int sizeMaxRect, int sizeMinBlob, bool blobFlag, vector<Mat> colorMasks, vector<Vec3b> colors);
-void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<Rect>> &frame_rectangles, vector<vector<Vec3b>> &frame_colors, string technic, int history, int sizeMinRect, int sizeMaxRect, int sizeMinBlob, bool blob, int gaussianSize, float seuil, vector<Vec3b> colorsJerseys);
+void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs, std::vector < cv::Rect> &rects, std::vector <Vec3b> &rectsColors, Detection_param param, vector<Mat> colorMasks, vector<Vec3b> colors);
+void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<Rect>> &frame_rectangles, vector<vector<Vec3b>> &frame_colors, Detection_param param, vector<Vec3b> colorsJerseys);
