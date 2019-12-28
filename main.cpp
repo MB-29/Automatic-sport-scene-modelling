@@ -31,7 +31,7 @@ int main()
 
 	// Initialize calibration
 	Matches matches;
-	Detection_param param;
+	DetectionParam param;
 	Image<Vec3b> first_frame;
 	video >> first_frame;
 	Image<Vec3b> source_image = first_frame ;
@@ -77,8 +77,7 @@ int main()
 	cout << "Number of colours : " << matches.colours.size() << endl;
 
 	// Player detection
-	vector<vector<Rect>> detected_rectangles;
-	vector<vector<Vec3b>> detected_rectangles_color;
+	vector<ColoredRectangle> detected_rectangles;
 
 	param.history = 5;
 	param.sizeMinRect = 0.5*typical_height;
@@ -86,20 +85,20 @@ int main()
 	param.gaussianSize = 5;
 	param.sizeMinBlob = 300;
 	param.blobFlag = false;
-	param.threshold = 0.5;
-	param.technic = "a";
+	float threshold = 0.5;
+	string technic = "a";
 	cout << "Detecting rectangles" << endl;
-	record_backgroundsubstract_rectangles(VIDEO_FILE_PATH, detected_rectangles, detected_rectangles_color, param, matches.colours);
+	record_backgroundsubstract_rectangles(VIDEO_FILE_PATH, detected_rectangles, param, matches.colours, matches.pitch);
 	// record_detection_rectangles(VIDEO_FILE_PATH, detected_rectangles);
 	cout << "Detection complete" << endl;
 	cout << "Detecting rectangles for " << detected_rectangles.size() << " frames" << endl;
 
 	// Filter rectangles
-	detected_rectangles = filter_rectangles(detected_rectangles, matches.pitch);
+	//detected_rectangles = filter_rectangles(detected_rectangles, matches.pitch);
 
 	// Player tracking
 
-	vector<vector<Rect>> matched_rectangles;
+	vector<vector<ColoredRectangle>> matched_rectangles;
 	//record_tracking_rectangles(VIDEO_FILE_PATH, detected_rectangles, matched_rectangles);
 	//cout << "Tracking complete" << endl;
 	//cout << "Tracking vector has "<< matched_rectangles.size()<< " elements" << endl;
