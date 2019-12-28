@@ -1,2 +1,0 @@
-masque ssupplémentaire seuil HSV 
-taille en fonction de l'homographie
