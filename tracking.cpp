@@ -164,65 +164,67 @@ void record_tracking_rectangles(string VIDEO_FILE_PATH, vector<vector<Rect>> &de
 	destroyWindow("Tracking");
 }
 
-void record_detection_rectangles(string video_file_path, vector<vector<Rect>> &detected_rectangles)
-{
-	float weight_threshold = 0.0;
-	int frame_index = 0;
-	VideoCapture video(video_file_path);
 
-	// Check if camera opened successfully
-	if (!video.isOpened())
-	{
-		cout << "Error opening video stream or file" << endl;
-	};
-	Mat frame;
-	video >> frame;
 
-	// Pedestrian recordor
-	HOGDescriptor detection;
-	detection.setSVMDetector(HOGDescriptor::getDefaultPeopleDetector());
+// void record_detection_rectangles(string video_file_path, vector<vector<Rect>> &detected_rectangles)
+// {
+// 	float weight_threshold = 0.0;
+// 	int frame_index = 0;
+// 	VideoCapture video(video_file_path);
 
-	while (1)
-	{
+// 	// Check if camera opened successfully
+// 	if (!video.isOpened())
+// 	{
+// 		cout << "Error opening video stream or file" << endl;
+// 	};
+// 	Mat frame;
+// 	video >> frame;
 
-		// Capture frame-by-frame
-		video.read(frame);
-		// cout << "frame index : " << frame_index << endl;
+// 	// Pedestrian recordor
+// 	HOGDescriptor detection;
+// 	detection.setSVMDetector(HOGDescriptor::getDefaultPeopleDetector());
 
-		// If the frame is empty, break immediately
-		if (frame.empty())
-		{
-			cout << "Coudl not read frame " << frame_index << endl;
-			break;
-		}
+// 	while (1)
+// 	{
 
-		vector<Rect> recordion_rectangles;
-		vector<double> weights;
+// 		// Capture frame-by-frame
+// 		video.read(frame);
+// 		// cout << "frame index : " << frame_index << endl;
 
-		Mat gray_frame;
-		cvtColor(frame, gray_frame, COLOR_BGR2GRAY);
-		detection.detectMultiScale(gray_frame, recordion_rectangles, weights);
-		int detection_rectangle_count = recordion_rectangles.size();
-		// cout << "recordion complete, number of reactangles deteceted : " << detection_rectangle_count << endl;
+// 		// If the frame is empty, break immediately
+// 		if (frame.empty())
+// 		{
+// 			cout << "Could not read frame " << frame_index << endl;
+// 			break;
+// 		}
 
-		detected_rectangles.push_back(recordion_rectangles);
-		/// draw recordions
-		for (size_t i = 0; i < detection_rectangle_count; i++)
-		{
-			if (weights[i] < weight_threshold)
-				continue;
-			rectangle(gray_frame, recordion_rectangles[i], cv::Scalar(0, 0, 255), 3);
-		}
+// 		vector<Rect> recordion_rectangles;
+// 		vector<double> weights;
 
-		// Display the resulting frame
-		imshow("HOG detection", gray_frame);
+// 		Mat gray_frame;
+// 		cvtColor(frame, gray_frame, COLOR_BGR2GRAY);
+// 		detection.detectMultiScale(gray_frame, recordion_rectangles, weights);
+// 		int detection_rectangle_count = recordion_rectangles.size();
+// 		// cout << "recordion complete, number of reactangles deteceted : " << detection_rectangle_count << endl;
 
-		// Press ESC to stop
-		if (waitKey(1) == 27)
-			break;
+// 		detected_rectangles.push_back(recordion_rectangles);
+// 		/// draw recordions
+// 		for (size_t i = 0; i < detection_rectangle_count; i++)
+// 		{
+// 			if (weights[i] < weight_threshold)
+// 				continue;
+// 			rectangle(gray_frame, recordion_rectangles[i], cv::Scalar(0, 0, 255), 3);
+// 		}
 
-		frame_index++;
-	}
-	video.release();
-	destroyWindow("HOG detection");
-}
+// 		// Display the resulting frame
+// 		imshow("HOG detection", gray_frame);
+
+// 		// Press ESC to stop
+// 		if (waitKey(1) == 27)
+// 			break;
+
+// 		frame_index++;
+// 	}
+// 	video.release();
+// 	destroyWindow("HOG detection");
+// }

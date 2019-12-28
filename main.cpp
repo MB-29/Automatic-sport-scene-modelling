@@ -1,20 +1,17 @@
 
 #include "homography.h"
-//#include "tracking.h"
+#include "tracking.h"
 #include "detection.h"
 
 
-string VIDEO_FILE_PATH = "../input/videos/ShortBasket.mp4";
-
-//string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/short.mp4";
-// string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis2.mp4";
+// string VIDEO_FILE_PATH = "../input/videos/ShortBasket.mp4";
+// string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/short.mp4";
+string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis2.mp4";
 // string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis_short.mp4";
 
-string above_image_path = "../input/images/pitch_resized.png";
-// string above_image_path = "../input/images/tennis_top.jpg";
-
+// string above_image_path = "../input/images/pitch_resized.png";
+string above_image_path = "../input/images/tennis_top.jpg";
 string photo_path = "../input/images/photo.jpg";
-
 
 int main()
 {	
@@ -41,14 +38,14 @@ int main()
 	imshow("source", source_image);
 	// imshow("target", target_image);
 
-	// Find camera view to top view homography.
+	// // Find camera view to top view homography.
 	// cout << "Point and click to set homographic pairs, then press any key to proceed." << endl;
 	// setMouseCallback("source", add_point_source, &matches);
 	// setMouseCallback("target", add_point_target, &matches);
 	// waitKey();
-	// destroyWindow("source");
+	// // destroyWindow("source");
 	// destroyWindow("target");
-	// cout << "Building homography" << endl;
+	// cout << "Computing homography" << endl;
 	// Mat homography = findHomography(matches.source_points, matches.target_points);
 	Mat homography;
 
@@ -65,7 +62,7 @@ int main()
 
 	// Select a player	
 	cout << "Select a player" << endl;
-	matches.player = selectROI("select tracker", source_image);
+	matches.player = selectROI("source", source_image);
 	int typical_height = matches.player.height;
 	//int typical_height = 100;
 
@@ -98,16 +95,15 @@ int main()
 	detected_rectangles = filter_rectangles(detected_rectangles, matches.pitch);
 
 	// Player tracking
-
 	vector<vector<Rect>> matched_rectangles;
-	//record_tracking_rectangles(VIDEO_FILE_PATH, detected_rectangles, matched_rectangles);
-	//cout << "Tracking complete" << endl;
-	//cout << "Tracking vector has "<< matched_rectangles.size()<< " elements" << endl;
-
+	vector<vector<Vec3b>> matched_rectangles_colors;
+	record_tracking_rectangles(VIDEO_FILE_PATH, detected_rectangles, matched_rectangles);
+	cout << "Tracking complete" << endl;
+	cout << "Tracking vector has "<< matched_rectangles.size()<< " elements" << endl;
 
 	// Plot points on the top view
 	cout << "Starting video homography" << endl;
-	video_homography(VIDEO_FILE_PATH, matched_rectangles, homography, Image<Vec3b>(imread(above_image_path)));
+	video_homography(VIDEO_FILE_PATH, matched_rectangles, matched_rectangles_colors, homography, Image<Vec3b>(imread(above_image_path)));
 	cout << "Finished" << endl;
 
 	waitKey();

@@ -42,7 +42,7 @@ Point homographic_transformation(const Mat &homography_matrix, Point input_point
 	return Point(u / w, v / w);
 }
 
-void draw_homographic_pair(Point point, Mat homography_matrix, Image<Vec3b> source_image, Image<Vec3b> target_image)
+void draw_homographic_pair(Point point, Mat homography_matrix, Image<Vec3b> source_image, Image<Vec3b> target_image, Vec3b color)
 {
 	circle(source_image, point, 2, Scalar(0, 0, 255), 2);
 	imshow("source", source_image);
@@ -53,7 +53,7 @@ void draw_homographic_pair(Point point, Mat homography_matrix, Image<Vec3b> sour
 }
 
 // Plot player points on top view
-void video_homography(string video_file_path, vector<vector<Rect>> &tracking_rectangles, Mat homography_matrix, Image<Vec3b> target_image)
+void video_homography(string video_file_path, vector<vector<Rect>> &tracking_rectangles, vector<vector<Vec3b>> &colors, Mat homography_matrix, Image<Vec3b> target_image)
 {
 	// Load video and initialize
 	VideoCapture video(video_file_path);
@@ -71,13 +71,14 @@ void video_homography(string video_file_path, vector<vector<Rect>> &tracking_rec
 	{
 		if (frame.empty())
 		{
-			cout << "Coudl not read frame " << frame_index << endl;
+			cout << "Could not read frame " << frame_index << endl;
 			break;
 		};
 
 		Image<Vec3b> source_image(frame);
 		Image<Vec3b> frame_target_image = (Image<Vec3b>)target_image.clone();
 		vector<Rect> frame_tracking_rectangles = *(tracking_rectangles_iterator);
+		// vector<Vec3b> frame_colors = colors[frame_index];
 		cout << "Frame tracking vector has " << frame_tracking_rectangles.size() << " rectangles" << endl;
 
 		// Plot points on both source and target images
@@ -87,7 +88,9 @@ void video_homography(string video_file_path, vector<vector<Rect>> &tracking_rec
 			float x = player_rectangle.x + player_rectangle.width / 2;
 			float y = player_rectangle.y + player_rectangle.height;
 			Point point(x, y);
-			draw_homographic_pair(point, homography_matrix, source_image, frame_target_image);
+			// Vec3b color = frame_colors[rectangle_index]
+			Vec3b color(0,0,255);
+			draw_homographic_pair(point, homography_matrix, source_image, frame_target_image, color);
 		}
 
 		// Increment
