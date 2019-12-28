@@ -244,7 +244,7 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 			std::cout << "Video Capture Fail" << std::endl;
 			break;
 		}
-		cout << "frame index = " << frame_index << endl;
+		// cout << "frame index = " << frame_index << endl;
 		frame_index++;
 
 		// obtain input image from source
@@ -325,7 +325,7 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 		imshow("foreground mask", foregroundMask);
 		imshow("foreground image", foregroundImgWithRect);
 
-		// waitKey();
+		waitKey();
 		if (waitKey(25) == 27)
 			break;
 

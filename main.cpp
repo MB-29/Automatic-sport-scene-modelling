@@ -5,12 +5,13 @@
 
 
 // string VIDEO_FILE_PATH = "../input/videos/ShortBasket.mp4";
-// string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/short.mp4";
-string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis2.mp4";
+// string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/basket_short2.mp4";
+string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/short.mp4";
+// string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis2.mp4";
 // string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis_short.mp4";
 
-// string above_image_path = "../input/images/pitch_resized.png";
-string above_image_path = "../input/images/tennis_top.jpg";
+string above_image_path = "../input/images/pitch_resized.png";
+// string above_image_path = "../input/images/tennis_top.jpg";
 string photo_path = "../input/images/photo.jpg";
 
 int main()
@@ -36,18 +37,18 @@ int main()
 	matches.source_image = source_image;
 	matches.target_image = target_image;
 	imshow("source", source_image);
-	// imshow("target", target_image);
+	imshow("target", target_image);
 
-	// // Find camera view to top view homography.
-	// cout << "Point and click to set homographic pairs, then press any key to proceed." << endl;
-	// setMouseCallback("source", add_point_source, &matches);
-	// setMouseCallback("target", add_point_target, &matches);
-	// waitKey();
-	// // destroyWindow("source");
-	// destroyWindow("target");
-	// cout << "Computing homography" << endl;
-	// Mat homography = findHomography(matches.source_points, matches.target_points);
-	Mat homography;
+	// Find camera view to top view homography.
+	cout << "Point and click to set homographic pairs, then press any key to proceed." << endl;
+	setMouseCallback("source", add_point_source, &matches);
+	setMouseCallback("target", add_point_target, &matches);
+	waitKey();
+	// destroyWindow("source");
+	destroyWindow("target");
+	cout << "Computing homography" << endl;
+	matches.homography_matrix = findHomography(matches.source_points, matches.target_points);
+	// Mat homography;
 
 	// Delimit pitch area by pointing and clicking
 	cout << "Point and click to delimit the pitch, press ENTER to validate." << endl;
@@ -78,7 +79,7 @@ int main()
 	vector<vector<Vec3b>> detected_rectangles_color;
 
 	param.history = 5;
-	param.sizeMinRect = 0.5*typical_height;
+	param.sizeMinRect = 0.4*typical_height;
 	param.sizeMaxRect = 1.5*typical_height;
 	param.gaussianSize = 5;
 	param.sizeMinBlob = 300;
@@ -97,13 +98,13 @@ int main()
 	// Player tracking
 	vector<vector<Rect>> matched_rectangles;
 	vector<vector<Vec3b>> matched_rectangles_colors;
-	record_tracking_rectangles(VIDEO_FILE_PATH, detected_rectangles, matched_rectangles);
+	record_tracking_rectangles(VIDEO_FILE_PATH, detected_rectangles, matched_rectangles, matched_rectangles_colors);
 	cout << "Tracking complete" << endl;
 	cout << "Tracking vector has "<< matched_rectangles.size()<< " elements" << endl;
 
 	// Plot points on the top view
 	cout << "Starting video homography" << endl;
-	video_homography(VIDEO_FILE_PATH, matched_rectangles, matched_rectangles_colors, homography, Image<Vec3b>(imread(above_image_path)));
+	video_homography(VIDEO_FILE_PATH, matched_rectangles, &matches);
 	cout << "Finished" << endl;
 
 	waitKey();

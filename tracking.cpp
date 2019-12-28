@@ -60,7 +60,7 @@ vector<Ptr<TrackerCSRT>> initialize_trackers(vector<Rect> &matched_rectangles, M
 }
 
 
-void record_tracking_rectangles(string VIDEO_FILE_PATH, vector<vector<Rect>> &detected_rectangles, vector<vector<Rect>> &matched_rectangles)
+void record_tracking_rectangles(string VIDEO_FILE_PATH, vector<vector<Rect>> &detected_rectangles, vector<vector<Rect>> &matched_rectangles, vector<vector<Vec3b>> &colours)
 {
 	// Load video
 	VideoCapture video(VIDEO_FILE_PATH);
@@ -88,7 +88,7 @@ void record_tracking_rectangles(string VIDEO_FILE_PATH, vector<vector<Rect>> &de
 
 	while (1)
 	{
-		cout << "Reading frame " << frame_index << endl;
+		// cout << "Reading frame " << frame_index << endl;
 		// If the frame is empty, break immediately
 		if (frame.empty())
 		{
@@ -97,7 +97,7 @@ void record_tracking_rectangles(string VIDEO_FILE_PATH, vector<vector<Rect>> &de
 		}
 
 		vector<Rect> frame_detected_rectangles = detected_rectangles[frame_index];
-		cout << "detected rectangles count : " << frame_detected_rectangles.size() << endl;
+		// cout << "detected rectangles count : " << frame_detected_rectangles.size() << endl;
 		// Show detection rectangles
 		// for (int rectangle_index = 0; rectangle_index < frame_detected_rectangles.size(); rectangle_index++)
 		// {
@@ -129,19 +129,21 @@ void record_tracking_rectangles(string VIDEO_FILE_PATH, vector<vector<Rect>> &de
 		imshow("Tracking", frame);
 
 		// Matched rectangles are chosen among tracking rectangles and detected rectangles
-		cout << "Choosing matched rectangles " << endl;
+		// cout << "Choosing matched rectangles " << endl;
 		frame_matched_rectangles = choose_rectangles(frame_detected_rectangles, frame_tracking_rectangles);
-		cout << "matched rectangles count : " << frame_matched_rectangles.size() << endl;
+		// cout << "matched rectangles count : " << frame_matched_rectangles.size() << endl;
 
 		// Add matched rectangles to the output vector
 		// vector<Rect> detected_rectangles = detected_rectangles_iterator[frame_index];
 		// add_trackers(detected_rectangles, frame_matched_rectangles, player_trackers, frame);
 		matched_rectangles.push_back(frame_matched_rectangles);
+
 		// Show newly matched rectangles
 		for (int rectangle_index = 0; rectangle_index < frame_matched_rectangles.size(); rectangle_index++)
 		{
 			Rect2d window = frame_matched_rectangles[rectangle_index];
-			rectangle(frame, window, Scalar(255, 255, 255), 2, 1);
+			Vec3b color(255, 255, 255);
+			rectangle(frame, window, color, 2, 1);
 			putText(frame, to_string(rectangle_index), Point(window.x, window.y), FONT_HERSHEY_PLAIN, 2, 2);
 
 		}
