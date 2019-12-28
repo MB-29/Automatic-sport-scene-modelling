@@ -77,7 +77,7 @@ int main()
 	cout << "Number of colours : " << matches.colours.size() << endl;
 
 	// Player detection
-	vector<ColoredRectangle> detected_rectangles;
+	vector<vector<ColoredRectangle>> detected_rectangles;
 
 	param.history = 5;
 	param.sizeMinRect = 0.5*typical_height;
@@ -85,8 +85,8 @@ int main()
 	param.gaussianSize = 5;
 	param.sizeMinBlob = 300;
 	param.blobFlag = false;
-	float threshold = 0.5;
-	string technic = "a";
+	param.threshold = 0.5;
+	param.technic = "a";
 	cout << "Detecting rectangles" << endl;
 	record_backgroundsubstract_rectangles(VIDEO_FILE_PATH, detected_rectangles, param, matches.colours, matches.pitch);
 	// record_detection_rectangles(VIDEO_FILE_PATH, detected_rectangles);

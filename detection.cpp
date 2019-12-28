@@ -23,13 +23,13 @@ Scalar moyenneMask(Mat &Moy, string filename)
 	cout << "Video of " << frame_count << " frames loaded" << endl;
 	capInit.retrieve(img, CAP_OPENNI_BGR_IMAGE);
 
-	Mat_<Vec3b> meanColour(frame_count, 1);
+	vector<Scalar> meanColour(frame_count, 1);
 
 
 
 	int n = img.cols;
 	int m = img.rows;
-	Image<Vec3f> Interm;
+	Image<Vec3f> Interm, Interm2;
 	img.convertTo(Moy, CV_32F, 1 / (255.0 * frame_count));
 
 	for (;;)
@@ -47,14 +47,16 @@ Scalar moyenneMask(Mat &Moy, string filename)
 			// obtain input image from source
 			capInit.retrieve(img, CAP_OPENNI_BGR_IMAGE);
 			img.convertTo(Interm, CV_32F, 1 / (255.0 * frame_count));
+			img.convertTo(Interm2, CV_32F);
 			//cv::divide(Interm, cv::Scalar((float)frame_count, (float)frame_count, (float)frame_count), Interm, 1, CV_32F);
-
-			i++;
 			add(Moy, Interm, Moy);
-			meanColour.at<Vec3b> = mean(Interm);
+			meanColour.push_back(mean(Interm2));
+			i++;
+			
 		}
 	}
 	Scalar globalMeanColour = mean(meanColour);
+	cout << "Mean colour of the background" << globalMeanColour << endl;
 	destroyAllWindows();
 	capInit.release();
 	return globalMeanColour;
@@ -87,13 +89,16 @@ void colorMask(const Mat &img, const Mat&foreground, std::vector<Mat> &rst, vect
 	if (!rst.empty()) {
 		rst.clear();
 	}
+	
 	Image<Vec3b> imgHSV;
 	int c = colorsJersey.size();
 	Mat_<Vec3b> matColorBGR(1, colorsJersey.size());
 	Mat_<Vec3b> matColorHSV(1, colorsJersey.size());
+
 	for (int r = 0; r < c; r++) {
 		matColorBGR.at<Vec3b>(0, r) = colorsJersey[r] ;
 	}
+
 	cvtColor(matColorBGR, matColorHSV, COLOR_BGR2HSV);
 	cvtColor(img, imgHSV, COLOR_BGR2HSV);
 	int n = imgHSV.cols;
@@ -118,13 +123,13 @@ void colorMask(const Mat &img, const Mat&foreground, std::vector<Mat> &rst, vect
 	}
 }
 
-
-void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs, std::vector <ColoredRectangle> &rects, DetectionParam param, vector<Mat> colorMasks, vector<Vec3b> colors, Point pitch[])
+void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs, std::vector <ColoredRectangle> &rectangles, DetectionParam param, vector<Mat> colorMasks, vector<Vec3b> colorsJerseys, Point pitch[])
 {
 	blobs.clear();
-	rects.clear();
+	rectangles.clear();
 
 	int c = colorMasks.size();
+
 
 	Mat_<int> distColor(c, 1, CV_32FC1);
 
@@ -132,11 +137,9 @@ void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs
 		distColor.at<int>(l, 0) = 0;
 	}
 
-
 	// Using labels from 2+ for each blob
 	cv::Mat label_image, label_image_old, mask;
 	binary.convertTo(label_image, CV_32FC1);
-
 	for (int i = 0; i < label_image.rows; i++)
 	{
 		for (int j = 0; j < label_image.cols; j++)
@@ -165,14 +168,17 @@ void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs
 			if (((int)label_image.at<int>(y, x) == 0))
 			{
 				ColoredRectangle rectangle;
-				rectangle.create_Colored_Rectangle(c);
+				rectangle = rectangle.create_Colored_Rectangle(c);
 
-				cv::floodFill(label_image, mask, cv::Point(x, y), cv::Scalar(label_count), &rectangle.rect, cv::Scalar(0), cv::Scalar(1), 8);
+				Rect rectToFill;
+
+				cv::floodFill(label_image, mask, cv::Point(x, y), cv::Scalar(label_count), &rectToFill, cv::Scalar(0), cv::Scalar(1), 8);
 				// loDiff (maximal lower diff to connect), upDiff (maximal upper diff to connect), $rect : output minimal bounding rectangle
 				// last arguments : 4 if only 4 neighbours checked ; 8 is 8 of them
 				std::vector<Point> blob;
+				rectangle.rect = rectToFill;
 
-				if (filter_rectangles(rectangle.rect, pitch)==true) {
+				if (filter_rectangles(rectangle, pitch)==true) {
 					for (int i = rectangle.rect.y; i < (rectangle.rect.y + rectangle.rect.height); i++)
 					{
 						for (int j = rectangle.rect.x; j < (rectangle.rect.x + rectangle.rect.width); j++)
@@ -188,6 +194,7 @@ void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs
 						}
 					}
 
+
 					if (((param.blobFlag) && (blob.size() > param.sizeMinBlob)) || (!param.blobFlag)) {
 						if ((rectangle.rect.height > param.sizeMinRect) && (rectangle.rect.height < param.sizeMaxRect)) {
 							blobs.push_back(blob);
@@ -198,7 +205,7 @@ void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs
 								}
 							}
 							rectangle.colors[iColorMaj] = 1;
-							rects.push_back(rectangle);
+							rectangles.push_back(rectangle);
 						}
 					}
 				}
@@ -210,7 +217,7 @@ void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs
 	}
 }
 
-void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<ColoredRectangle>> frame_rectangles, DetectionParam param, vector<Vec3b> colorsJerseys, Point pitch[])
+void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<ColoredRectangle>> &frame_rectangles, DetectionParam param, vector<Vec3b> colorsJerseys, Point pitch[])
 {
 
 	// Init background substractor
@@ -233,7 +240,6 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 	// The last color of this list is the color "of the background"
 	colorsJerseys.push_back(meanColorVec3b);
 
-	cout << colorsJerseys << endl;
 
 	// capture video from source 0, which is web camera, If you want capture video from file just replace //by �VideoCapture cap("videoFile.mov")
 	VideoCapture cap(video_file_path);
@@ -278,9 +284,11 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 			initializeMask(foregroundMask, img, Moy, param.threshold);
 		}
 
+
 	
 		colorMask(img, foregroundMask, clrMasks, colorsJerseys);
 
+	
 		// smooth the mask to reduce noise in image
 		//GaussianBlur(foregroundMask, foregroundMask, Size(11, 11), 3.5, 3.5);
 
@@ -302,10 +310,10 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 
 		std::vector<std::vector<Point>> blobs;
 		std::vector< ColoredRectangle > rects;
+		
 
 		cv::Mat binary;
 		labelBlobs(foregroundMask, blobs, rects, param, clrMasks, colorsJerseys, pitch);
-
 
 
 		Mat foregroundImgWithRect;
@@ -317,8 +325,13 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 
 		for (int k = 0; k < rects.size(); k++)
 		{	
-			for 
-			rectangle(foregroundImgWithRect, rectangle[k], rectsColor[k], 3);
+			Vec3b colorOfTheRectangle;
+			for (int l = 0; l < colorsJerseys.size(); l++) {
+				if (rects[k].colors[l] == 1) {
+					colorOfTheRectangle = colorsJerseys[l];
+				}
+			}
+			rectangle(foregroundImgWithRect, rects[k].rect, colorOfTheRectangle, 3);
 
 		}
 
@@ -349,7 +362,7 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 	destroyWindow("real image");
 }
 
-bool filter_rectangles(Rect rectangle, Point pitch[])
+bool filter_rectangles(ColoredRectangle rectangle, Point pitch[])
 {
 	//vector<vector<Rect>> filtered;
 	//for (int frame_index = 0; frame_index < detection_rectangles.size(); frame_index++)
@@ -360,7 +373,7 @@ bool filter_rectangles(Rect rectangle, Point pitch[])
 		//for (int rectangle_index = 0; rectangle_index < frame_rectangles.size(); rectangle_index++)
 		//{
 			//Rect rectangle = frame_rectangles[rectangle_index];
-			float x = rectangle.x, y = rectangle.y, w = rectangle.width, h = rectangle.height;
+			float x = rectangle.rect.x, y = rectangle.rect.y, w = rectangle.rect.width, h = rectangle.rect.height;
 			Point corners[4] = {Point(x, y), Point(x + w, y), Point(x, y + h), Point(x + w, y + h)};
 			bool out = true;
 			for (int corner_index = 0; corner_index < 4; corner_index++)

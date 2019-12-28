@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include "image.h"
+#include "detection.h"
 
 using namespace std;
 using namespace cv;
@@ -33,6 +34,6 @@ void add_point_source(int event, int x, int y, int foo, void *data);
 void add_point_target(int event, int x, int y, int foo, void *data);
 Point homographic_transformation(const Mat &homography_matrix, Point input_point);
 void draw_homographic_pair(Point point, Mat homography_matrix, Image<Vec3b> source_image, Image<Vec3b> target_image);
-void video_homography(string video_file_path, vector<vector<Rect>> &tracking_rectangles, Mat homography_matrix, Image<Vec3b> target_image);
+void video_homography(string video_file_path, vector<vector<ColoredRectangle>> &tracking_rectangles, Mat homography_matrix, Image<Vec3b> target_image);
 void select_colour(int event, int x, int y, int foo, void *data);
 void add_pitch_point(int event, int x, int y, int foo, void *data);

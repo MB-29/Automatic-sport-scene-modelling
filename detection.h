@@ -31,7 +31,7 @@ struct ColoredRectangle {
 	Rect rect;
 	vector<int> colors;
 	ColoredRectangle create_Colored_Rectangle(int sizeColorsJerseys){
-		auto colored_rectangle = Colored_Rectangle{};
+		auto colored_rectangle = ColoredRectangle{};
 		Rect rect_created(0, 0, 0, 0);
 		colored_rectangle.rect = rect_created;
 		vector<int> colors_created;
@@ -52,7 +52,7 @@ struct ColoredRectangle {
 
 Scalar moyenneMask(Mat &Moy, string filename);
 void initializeMask(Mat &foregroundMask, const Mat &frame, const Mat &Moy, float seuil);
-vector<vector<Rect>> filter_rectangles(vector<vector<Colored_Rectangles>> &detection_rectangles, Point pitch[]);
-void colorMask(const Mat &img, const Mat&foreground, Mat &rst, vector<Vec3b> colors, float icolor);
-void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs, std::vector <Colored_Rectangle> rectangles, Detection_param param, vector<Mat> colorMasks, vector<Vec3b> colorsJerseys);
-void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<Colored_Rectangle>> &frame_rectangles, Detection_param param, vector<Vec3b> colorsJerseys);
+bool filter_rectangles(ColoredRectangle rectangle, Point pitch[]);
+void colorMask(const Mat &img, const Mat&foreground, std::vector<Mat> &rst, vector<Vec3b> colors);
+void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs, std::vector <ColoredRectangle> &rectangles, DetectionParam param, vector<Mat> colorMasks, vector<Vec3b> colorsJerseys, Point pitch[]);
+void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<ColoredRectangle>> &frame_rectangles, DetectionParam param, vector<Vec3b> colorsJerseys, Point pitch[]);
