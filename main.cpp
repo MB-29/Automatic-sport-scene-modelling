@@ -1,12 +1,12 @@
 
 #include "homography.h"
-#include "tracking.h"
+//#include "tracking.h"
 #include "detection.h"
 
 
-// string VIDEO_FILE_PATH = "../input/videos/ShortBasket.mp4";
+string VIDEO_FILE_PATH = "../input/videos/ShortBasket.mp4";
 // string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/basket_short2.mp4";
-string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/short.mp4";
+//string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/short.mp4";
 // string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis2.mp4";
 // string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis_short.mp4";
 
@@ -97,14 +97,14 @@ int main()
 	// Player tracking
 
 	vector<vector<ColoredRectangle>> matched_rectangles;
-	record_tracking_rectangles(VIDEO_FILE_PATH, detected_rectangles, matched_rectangles);
-	cout << "Tracking complete" << endl;
-	cout << "Tracking vector has "<< matched_rectangles.size()<< " elements" << endl;
+	//record_tracking_rectangles(VIDEO_FILE_PATH, detected_rectangles, matched_rectangles);
+	//cout << "Tracking complete" << endl;
+	//cout << "Tracking vector has "<< matched_rectangles.size()<< " elements" << endl;
 
 
 	// Plot points on the top view
 	cout << "Starting video homography" << endl;
-	video_homography(VIDEO_FILE_PATH, matched_rectangles, &matches);
+	//video_homography(VIDEO_FILE_PATH, matched_rectangles, &matches);
 	cout << "Finished" << endl;
 
 	waitKey();

@@ -20,7 +20,7 @@ void add_point_target(int event, int x, int y, int foo, void *data)
 	if (event != EVENT_LBUTTONDOWN)
 		return;
 	Matches *matches = (Matches *)data;
-	int count = matches->target_points.size();
+	int co unt = matches->target_points.size();
 	cout << "x = " << x << ", y = " << y << endl;
 	Point point = Point(x, y);
 	circle(matches->target_image, point, 2, Scalar(0, 255, 0), 2);
@@ -52,11 +52,7 @@ void draw_homographic_pair(Point point, Mat homography_matrix, Image<Vec3b> sour
 }
 
 // Plot player points on top view
-<<<<<<< HEAD
-void video_homography(string video_file_path, vector<vector<ColoredRectangle>> &tracking_rectangles, Mat homography_matrix, Image<Vec3b> target_image)
-=======
-void video_homography(string video_file_path, vector<vector<Rect>> &tracking_rectangles, void *data)
->>>>>>> jerseys
+void video_homography(string video_file_path, vector<vector<ColoredRectangle>> &tracking_rectangles, void *data)
 {
 	Matches *matches = (Matches *)data;
 	Vec3b jersey_color_1 = matches->colours[0];
@@ -86,22 +82,14 @@ void video_homography(string video_file_path, vector<vector<Rect>> &tracking_rec
 
 		Image<Vec3b> source_image(frame);
 		Image<Vec3b> frame_target_image = (Image<Vec3b>)target_image.clone();
-<<<<<<< HEAD
 		vector<ColoredRectangle> frame_tracking_rectangles = *(tracking_rectangles_iterator);
 		cout << "Frame tracking vector has " << frame_tracking_rectangles.size() << " rectangles" << endl;
-=======
-		vector<Rect> frame_tracking_rectangles = *(tracking_rectangles_iterator);
->>>>>>> jerseys
 
 		// Plot points on both source and target images
 		for (int rectangle_index = 0; rectangle_index < frame_tracking_rectangles.size(); rectangle_index++)
 		{
-<<<<<<< HEAD
 			Rect player_rectangle = frame_tracking_rectangles[rectangle_index].rect;
-=======
 			cout << " Rectangle " << rectangle_index << " out of " << frame_tracking_rectangles.size() << endl;
-			Rect player_rectangle = frame_tracking_rectangles[rectangle_index];
->>>>>>> jerseys
 			float x = player_rectangle.x + player_rectangle.width / 2;
 			float y = player_rectangle.y + player_rectangle.height;
 			Point point(x, y);
@@ -184,6 +172,7 @@ int get_jersey_colour(Mat &frame, Rect rectangle, Vec3b jersey_colour_1, Vec3b j
 			Vec3b pixel_colour = image(x, y);
 			distance_1 +=  norm(pixel_colour - jersey_colour_1);
 			distance_1 +=  norm(pixel_colour - jersey_colour_1);
+			//maskUnit.at<uchar>(i, j) += (int)(norm(imgHSV.at<Vec3b>(i, j), matColorHSV.at<Vec3b>(0, r), NORM_L2));
 		}
 	}
 	if (distance_1 < distance_2) return 0;

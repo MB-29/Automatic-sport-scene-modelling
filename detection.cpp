@@ -7,8 +7,9 @@
 float WEIGHT_THRESHOLD = 0.7;
 // string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/short.mp4";
 
-// Fin mise à jours struct param
-// Structure Rectangles avec liste des colors dedans, ou passer la liste des colors toujours en argument ?
+// calcul couleurs rectangles dans fonction à part
+// ColoredRectangle dans tracking.cpp
+// pitch dans Decetction_param ?
 // Améliorer détection couleurs
 // Taille des joueurs avec perspective
 // Statistiques à faire ??
@@ -123,19 +124,10 @@ void colorMask(const Mat &img, const Mat&foreground, std::vector<Mat> &rst, vect
 	}
 }
 
-void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs, std::vector <ColoredRectangle> &rectangles, DetectionParam param, vector<Mat> colorMasks, vector<Vec3b> colorsJerseys, Point pitch[])
+void labelBlobs(const cv::Mat &binary, const Mat &frame, std::vector <ColoredRectangle> &rectangles, DetectionParam param, vector<Vec3b> colorsJerseys, Point pitch[])
 {
-	blobs.clear();
 	rectangles.clear();
 
-	int c = colorMasks.size();
-
-
-	Mat_<int> distColor(c, 1, CV_32FC1);
-
-	for (int l = 0; l < c; l++) {
-		distColor.at<int>(l, 0) = 0;
-	}
 
 	// Using labels from 2+ for each blob
 	cv::Mat label_image, label_image_old, mask;
@@ -187,9 +179,6 @@ void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs
 							{
 
 								blob.push_back(cv::Point(j, i));
-								for (int l = 0; l < c; l++) {
-									distColor.at<int>(l, 0) += colorMasks[l].at<uchar>(i, j);
-								}
 							}
 						}
 					}
@@ -197,14 +186,9 @@ void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs
 
 					if (((param.blobFlag) && (blob.size() > param.sizeMinBlob)) || (!param.blobFlag)) {
 						if ((rectangle.rect.height > param.sizeMinRect) && (rectangle.rect.height < param.sizeMaxRect)) {
-							blobs.push_back(blob);
-							int iColorMaj = 0;
-							for (int l = 0; l < c; l++) {
-								if (distColor.at<int>(l, 0) > distColor.at<int>(iColorMaj, 0)) {
-									iColorMaj = l;
-								}
-							}
-							rectangle.colors[iColorMaj] = 1;
+							rectangle.blob = blob;
+							int detect_colour(const Mat &frame, ColoredRectangle rectangle, vector<Vec3b> colorsJersey)
+							int icolour = detect_colour(frame, rectangle, colorsJersey);
 							rectangles.push_back(rectangle);
 						}
 					}
@@ -229,7 +213,7 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 
 	// Create empty input img, foreground and background image and foreground mask.
 	Mat img, foregroundMask, backgroundImage, foregroundImg;
-	vector<Mat> clrMasks;
+	//vector<Mat> clrMasks;
 
 	Image<Vec3f> Moy;
 
@@ -260,7 +244,7 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 			std::cout << "Video Capture Fail" << std::endl;
 			break;
 		}
-		// cout << "frame index = " << frame_index << endl;
+		cout << "frame index = " << frame_index << endl;
 		frame_index++;
 
 		// obtain input image from source
@@ -286,7 +270,7 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 
 
 	
-		colorMask(img, foregroundMask, clrMasks, colorsJerseys);
+		//colorMask(img, foregroundMask, clrMasks, colorsJerseys);
 
 	
 		// smooth the mask to reduce noise in image
@@ -313,7 +297,7 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 		
 
 		cv::Mat binary;
-		labelBlobs(foregroundMask, blobs, rects, param, clrMasks, colorsJerseys, pitch);
+		labelBlobs(foregroundMask, img, rects, param, colorsJerseys, pitch);
 
 
 		Mat foregroundImgWithRect;
@@ -394,6 +378,47 @@ bool filter_rectangles(ColoredRectangle rectangle, Point pitch[])
 	return !out;
 }
 
+
+int detect_colour(const Mat &frame, ColoredRectangle rectangle, vector<Vec3b> colorsJersey)
+{
+	if (rectangle.colors.size != colorsJersey.size()) {
+		cout << "Error : different numbers of jersey colours" << endl;
+	}
+	Image<Vec3b> image(frame);
+	Image<Vec3b> imgHSV;
+	int c = colorsJersey.size();
+	vector<Point> points = rectangle.blob;
+	int n = points.size();
+	Mat_<Vec3b> matColorBGR(1, c);
+	Mat_<Vec3b> matColorHSV(1, c);
+	Mat_<int> distColor(c, 1, CV_32FC1);
+	for (int l = 0; l < c; l++) {
+		distColor.at<int>(l, 0) = 0;
+	}
+	for (int r = 0; r < c; r++) {
+		matColorBGR.at<Vec3b>(0, r) = colorsJersey[r];
+	}
+
+	cvtColor(matColorBGR, matColorHSV, COLOR_BGR2HSV);
+	cvtColor(img, imgHSV, COLOR_BGR2HSV);
+	int n = imgHSV.cols;
+	int m = imgHSV.rows;
+
+	for (int r = 0; r < c; r++) {
+		for (int k = 0; k < n; k++) {
+			distColor.at<int>(r, 0) += (int)(norm(imgHSV.at<Vec3b>(points[k].x, points[k].y), matColorHSV.at<Vec3b>(0, r), NORM_L2));
+			//distance_1 += norm(pixel_colour - jersey_colour_1);
+		}
+	}
+	int iColorMaj = 0;
+	for (int l = 0; l < c; l++) {
+		if (distColor.at<int>(l, 0) > distColor.at<int>(iColorMaj, 0)) {
+			iColorMaj = l;
+		}
+	}
+	rectangle.colors[iColorMaj] = 1;
+	return iColorMaj;
+}
 // void BrightnessAndContrastAuto(const cv::Mat &src, cv::Mat &dst, float clipHistPercent = 0)
 // {
 
