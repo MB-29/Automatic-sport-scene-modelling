@@ -20,7 +20,7 @@ void add_point_target(int event, int x, int y, int foo, void *data)
 	if (event != EVENT_LBUTTONDOWN)
 		return;
 	Matches *matches = (Matches *)data;
-	int co unt = matches->target_points.size();
+	int count = matches->target_points.size();
 	cout << "x = " << x << ", y = " << y << endl;
 	Point point = Point(x, y);
 	circle(matches->target_image, point, 2, Scalar(0, 255, 0), 2);

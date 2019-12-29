@@ -63,9 +63,9 @@ int main()
 
 	// Select a player	
 	cout << "Select a player" << endl;
-	matches.player = selectROI("source", source_image);
-	int typical_height = matches.player.height;
-	//int typical_height = 100;
+	//matches.player = selectROI("source", source_image);
+	//int typical_height = matches.player.height;
+	int typical_height = 100;
 
 
 	// Select colours
@@ -83,7 +83,7 @@ int main()
 	param.gaussianSize = 5;
 	param.sizeMinBlob = 300;
 	param.blobFlag = false;
-	param.threshold = 0.5;
+	param.threshold = 0;// En HSV, la distance entre 2 couleurs varie plutôt entre 50000 et 100000. En BGR, entre 0 et 1
 	param.technic = "a";
 	cout << "Detecting rectangles" << endl;
 	record_backgroundsubstract_rectangles(VIDEO_FILE_PATH, detected_rectangles, param, matches.colours, matches.pitch);

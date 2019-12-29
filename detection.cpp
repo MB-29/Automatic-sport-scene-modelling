@@ -9,6 +9,7 @@ float WEIGHT_THRESHOLD = 0.7;
 
 // calcul couleurs rectangles dans fonction à part
 // ColoredRectangle dans tracking.cpp
+// HSV moyenneMask
 // pitch dans Decetction_param ?
 // Améliorer détection couleurs
 // Taille des joueurs avec perspective
@@ -21,20 +22,22 @@ Scalar moyenneMask(Mat &Moy, string filename)
 	int i = 0;
 	bool ok = capInit.grab();
 	int frame_count = capInit.get(CAP_PROP_FRAME_COUNT);
-	cout << "Video of " << frame_count << " frames loaded" << endl;
+	std::cout << "Video of " << frame_count << " frames loaded" << endl;
 	capInit.retrieve(img, CAP_OPENNI_BGR_IMAGE);
 
 	vector<Scalar> meanColour(frame_count, 1);
-
 
 
 	int n = img.cols;
 	int m = img.rows;
 	Image<Vec3f> Interm, Interm2;
 	img.convertTo(Moy, CV_32F, 1 / (255.0 * frame_count));
+	//cvtColor(Moy, Moy, COLOR_BGR2HSV);
+
 
 	for (;;)
 	{
+
 		bool ok = capInit.grab();
 		if (ok == false)
 		{
@@ -48,7 +51,9 @@ Scalar moyenneMask(Mat &Moy, string filename)
 			// obtain input image from source
 			capInit.retrieve(img, CAP_OPENNI_BGR_IMAGE);
 			img.convertTo(Interm, CV_32F, 1 / (255.0 * frame_count));
+			//cvtColor(Interm, Interm, COLOR_BGR2HSV);
 			img.convertTo(Interm2, CV_32F);
+			//cvtColor(Interm2, Interm2, COLOR_BGR2HSV);
 			//cv::divide(Interm, cv::Scalar((float)frame_count, (float)frame_count, (float)frame_count), Interm, 1, CV_32F);
 			add(Moy, Interm, Moy);
 			meanColour.push_back(mean(Interm2));
@@ -67,6 +72,8 @@ void initializeMask(Mat &foregroundMask, const Mat &frame, const Mat &Moy, float
 {
 	Image<Vec3f> imgFloat;
 	frame.convertTo(imgFloat, CV_32F, 1 / 255.0);
+	//cvtColor(imgFloat, imgFloat, COLOR_BGR2HSV);
+	waitKey();
 	int n = frame.cols;
 	int m = frame.rows;
 	for (int i = 0; i < m; i++)
@@ -83,6 +90,7 @@ void initializeMask(Mat &foregroundMask, const Mat &frame, const Mat &Moy, float
 			}
 		}
 	}
+	imshow("maaskMoy", foregroundMask);
 }
 
 void colorMask(const Mat &img, const Mat&foreground, std::vector<Mat> &rst, vector<Vec3b> colorsJersey) {
@@ -127,6 +135,7 @@ void colorMask(const Mat &img, const Mat&foreground, std::vector<Mat> &rst, vect
 void labelBlobs(const cv::Mat &binary, const Mat &frame, std::vector <ColoredRectangle> &rectangles, DetectionParam param, vector<Vec3b> colorsJerseys, Point pitch[])
 {
 	rectangles.clear();
+	int c = colorsJerseys.size();
 
 
 	// Using labels from 2+ for each blob
@@ -187,9 +196,12 @@ void labelBlobs(const cv::Mat &binary, const Mat &frame, std::vector <ColoredRec
 					if (((param.blobFlag) && (blob.size() > param.sizeMinBlob)) || (!param.blobFlag)) {
 						if ((rectangle.rect.height > param.sizeMinRect) && (rectangle.rect.height < param.sizeMaxRect)) {
 							rectangle.blob = blob;
-							int detect_colour(const Mat &frame, ColoredRectangle rectangle, vector<Vec3b> colorsJersey)
-							int icolour = detect_colour(frame, rectangle, colorsJersey);
-							rectangles.push_back(rectangle);
+							int icolour = detect_colour(frame, rectangle, colorsJerseys);
+							rectangle.colors[icolour] = 1;
+							cout << icolour << endl;
+							//if (icolour != (c - 1)) { Cette condition ne marche pas, la couleur bleu sombre est trop proche de la couleur moyenne du background
+								rectangles.push_back(rectangle);
+							//}
 						}
 					}
 				}
@@ -219,7 +231,13 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 
 	Scalar meanColor = moyenneMask(Moy, video_file_path);
 
-	Vec3b meanColorVec3b = Vec3b(meanColor[0], meanColor[1], meanColor[2]);
+	Vec3b meanColorVec3b = Vec3b(meanColor[0], meanColor[1], meanColor[2]); // Attention, c'est en HSV !!
+
+	//Mat_<Vec3b> matColorBGR(1, 1);
+	//Mat_<Vec3b> matColorHSV(1, 1);
+	//matColorHSV.at<Vec3b>(0, 0) = meanColorVec3b;
+	cout << "Mean colour of the background" << meanColorVec3b << endl;
+	//cvtColor(matColorHSV, matColorBGR, COLOR_HSV2BGR);
 
 	// The last color of this list is the color "of the background"
 	colorsJerseys.push_back(meanColorVec3b);
@@ -313,6 +331,7 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 			for (int l = 0; l < colorsJerseys.size(); l++) {
 				if (rects[k].colors[l] == 1) {
 					colorOfTheRectangle = colorsJerseys[l];
+
 				}
 			}
 			rectangle(foregroundImgWithRect, rects[k].rect, colorOfTheRectangle, 3);
@@ -379,19 +398,19 @@ bool filter_rectangles(ColoredRectangle rectangle, Point pitch[])
 }
 
 
-int detect_colour(const Mat &frame, ColoredRectangle rectangle, vector<Vec3b> colorsJersey)
+int detect_colour(const Mat &frame, const ColoredRectangle &rectangle, vector<Vec3b> colorsJersey)
 {
-	if (rectangle.colors.size != colorsJersey.size()) {
+	if (rectangle.colors.size() != colorsJersey.size()) {
 		cout << "Error : different numbers of jersey colours" << endl;
 	}
 	Image<Vec3b> image(frame);
 	Image<Vec3b> imgHSV;
 	int c = colorsJersey.size();
 	vector<Point> points = rectangle.blob;
-	int n = points.size();
+	int t = points.size();
 	Mat_<Vec3b> matColorBGR(1, c);
 	Mat_<Vec3b> matColorHSV(1, c);
-	Mat_<int> distColor(c, 1, CV_32FC1);
+	Mat_<int> distColor(t, 1, CV_32FC1);
 	for (int l = 0; l < c; l++) {
 		distColor.at<int>(l, 0) = 0;
 	}
@@ -400,23 +419,40 @@ int detect_colour(const Mat &frame, ColoredRectangle rectangle, vector<Vec3b> co
 	}
 
 	cvtColor(matColorBGR, matColorHSV, COLOR_BGR2HSV);
-	cvtColor(img, imgHSV, COLOR_BGR2HSV);
+	cvtColor(image, imgHSV, COLOR_BGR2HSV);
 	int n = imgHSV.cols;
 	int m = imgHSV.rows;
 
-	for (int r = 0; r < c; r++) {
-		for (int k = 0; k < n; k++) {
-			distColor.at<int>(r, 0) += (int)(norm(imgHSV.at<Vec3b>(points[k].x, points[k].y), matColorHSV.at<Vec3b>(0, r), NORM_L2));
+	//for (int r = 0; r < c; r++) {
+		//for (int k = 0; k < t; k++) {
+			//distColor.at<int>(r, 0) += (int)(norm(imgHSV.at<Vec3b>(points[k].y, points[k].x), matColorHSV.at<Vec3b>(0, r), NORM_L2));
 			//distance_1 += norm(pixel_colour - jersey_colour_1);
+		//}
+	//}
+	for (int k = 0; k < t; k++) {
+		int iColorMaj = 0;
+		for (int r = 0; r < c-1; r++) {
+			int norm1 = (int)(norm(imgHSV.at<Vec3b>(points[k].y, points[k].x), matColorHSV.at<Vec3b>(0, r), NORM_L2));
+			int norm2 = (int)(norm(imgHSV.at<Vec3b>(points[k].y, points[k].x), matColorHSV.at<Vec3b>(0, iColorMaj), NORM_L2));
+			if ((norm1 < norm2) && (norm1 < 300))// Le seuil de 30 est très expérimental
+			{
+				iColorMaj = r;
+				//distance_1 += norm(pixel_colour - jersey_colour_1);
+			}
 		}
+		distColor.at<int>(iColorMaj, 0) += 1;
 	}
-	int iColorMaj = 0;
+
+
+	int iColorMaj = c-1;
 	for (int l = 0; l < c; l++) {
 		if (distColor.at<int>(l, 0) > distColor.at<int>(iColorMaj, 0)) {
 			iColorMaj = l;
 		}
 	}
-	rectangle.colors[iColorMaj] = 1;
+	if (distColor.at<int>(iColorMaj, 0) < (t / 2)) { // Mais si ça ne représente pas au moins 1/2 (limite arbitraire aussi...) des points du blob...
+		iColorMaj = c - 1;
+	}
 	return iColorMaj;
 }
 // void BrightnessAndContrastAuto(const cv::Mat &src, cv::Mat &dst, float clipHistPercent = 0)
