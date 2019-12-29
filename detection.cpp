@@ -198,7 +198,6 @@ void labelBlobs(const cv::Mat &binary, const Mat &frame, std::vector <ColoredRec
 							rectangle.blob = blob;
 							int icolour = detect_colour(frame, rectangle, colorsJerseys);
 							rectangle.colors[icolour] = 1;
-							cout << icolour << endl;
 							//if (icolour != (c - 1)) { Cette condition ne marche pas, la couleur bleu sombre est trop proche de la couleur moyenne du background
 								rectangles.push_back(rectangle);
 							//}
