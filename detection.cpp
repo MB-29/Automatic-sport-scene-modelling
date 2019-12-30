@@ -4,9 +4,6 @@
 #include "homography.h"
 
 
-float WEIGHT_THRESHOLD = 0.7;
-// string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/short.mp4";
-
 // calcul couleurs rectangles dans fonction à part
 // ColoredRectangle dans tracking.cpp
 // HSV moyenneMask
@@ -73,7 +70,7 @@ void initializeMask(Mat &foregroundMask, const Mat &frame, const Mat &Moy, float
 	Image<Vec3f> imgFloat;
 	frame.convertTo(imgFloat, CV_32F, 1 / 255.0);
 	//cvtColor(imgFloat, imgFloat, COLOR_BGR2HSV);
-	waitKey();
+	// waitKey();
 	int n = frame.cols;
 	int m = frame.rows;
 	for (int i = 0; i < m; i++)
@@ -453,6 +450,18 @@ int detect_colour(const Mat &frame, const ColoredRectangle &rectangle, vector<Ve
 		iColorMaj = c - 1;
 	}
 	return iColorMaj;
+}
+
+vector<vector<Rect>> get_rectangles(vector<vector<ColoredRectangle>> &colored){
+	vector<vector<Rect>> res;
+	for (auto frame : colored){
+		vector<Rect> frame_rectangles;
+		for (auto rectangle : frame){
+			frame_rectangles.push_back(rectangle.rect);
+		}
+		res.push_back(frame_rectangles);
+	}
+	return res;
 }
 // void BrightnessAndContrastAuto(const cv::Mat &src, cv::Mat &dst, float clipHistPercent = 0)
 // {

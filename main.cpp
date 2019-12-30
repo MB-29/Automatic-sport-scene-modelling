@@ -1,12 +1,12 @@
 
 #include "homography.h"
-//#include "tracking.h"
+#include "tracking.h"
 #include "detection.h"
 
 
-string VIDEO_FILE_PATH = "../input/videos/ShortBasket.mp4";
+// string VIDEO_FILE_PATH = "../input/videos/ShortBasket.mp4";
 // string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/basket_short2.mp4";
-//string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/short.mp4";
+string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/short.mp4";
 // string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis2.mp4";
 // string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis_short.mp4";
 
@@ -48,7 +48,7 @@ int main()
 	destroyWindow("target");
 	cout << "Computing homography" << endl;
 	matches.homography_matrix = findHomography(matches.source_points, matches.target_points);
-	// Mat homography;
+	matches.target_image = Image<Vec3b>(imread(above_image_path));
 
 	// Delimit pitch area by pointing and clicking
 	cout << "Point and click to delimit the pitch, press ENTER to validate." << endl;
@@ -59,7 +59,7 @@ int main()
 			cout << "Error : pitch must be delimited by exactly 4 points" << endl;
 			return 1;
 		}
-	};
+	}
 
 	// Select a player	
 	cout << "Select a player" << endl;
@@ -75,7 +75,8 @@ int main()
 	cout << "Number of colours : " << matches.colours.size() << endl;
 
 	// Player detection
-	vector<vector<ColoredRectangle>> detected_rectangles;
+	vector<vector<ColoredRectangle>> detected_colored_rectangles;
+	vector<vector<Rect>> detected_rectangles;
 
 	param.history = 5;
 	param.sizeMinRect = 0.4*typical_height;
@@ -83,29 +84,30 @@ int main()
 	param.gaussianSize = 5;
 	param.sizeMinBlob = 300;
 	param.blobFlag = false;
-	param.threshold = 0.5;// En HSV, la distance entre 2 couleurs varie plutôt entre 50000 et 100000. En BGR, entre 0 et 1
+	param.threshold = 0.5;// En HSV, la distance entre 2 couleurs varie plutï¿½t entre 50000 et 100000. En BGR, entre 0 et 1
 	param.technic = "a";
 	cout << "Detecting rectangles" << endl;
-	record_backgroundsubstract_rectangles(VIDEO_FILE_PATH, detected_rectangles, param, matches.colours, matches.pitch);
+	record_backgroundsubstract_rectangles(VIDEO_FILE_PATH, detected_colored_rectangles, param, matches.colours, matches.pitch);
 	// record_detection_rectangles(VIDEO_FILE_PATH, detected_rectangles);
 	cout << "Detection complete" << endl;
 	cout << "Detecting rectangles for " << detected_rectangles.size() << " frames" << endl;
+	detected_rectangles  = get_rectangles(detected_colored_rectangles);
 
 	// Filter rectangles
 	//detected_rectangles = filter_rectangles(detected_rectangles, matches.pitch);
-	// Je l'ai fait en même temps que la détection, ça me permettait de le visualiser (Margot)
+	// Je l'ai fait en mï¿½me temps que la dï¿½tection, ï¿½a me permettait de le visualiser (Margot)
 
 	// Player tracking
 
-	vector<vector<ColoredRectangle>> matched_rectangles;
-	//record_tracking_rectangles(VIDEO_FILE_PATH, detected_rectangles, matched_rectangles);
-	//cout << "Tracking complete" << endl;
-	//cout << "Tracking vector has "<< matched_rectangles.size()<< " elements" << endl;
+	vector<vector<Rect>> matched_rectangles;
+	record_tracking_rectangles(VIDEO_FILE_PATH, detected_rectangles, matched_rectangles);
+	cout << "Tracking complete" << endl;
+	cout << "Tracking vector has "<< matched_rectangles.size()<< " elements" << endl;
 
 
 	// Plot points on the top view
 	cout << "Starting video homography" << endl;
-	//video_homography(VIDEO_FILE_PATH, matched_rectangles, &matches);
+	video_homography(VIDEO_FILE_PATH, matched_rectangles, &matches);
 	cout << "Finished" << endl;
 
 	waitKey();

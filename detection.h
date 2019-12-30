@@ -26,7 +26,7 @@ struct DetectionParam {
 	float threshold;
 };
 
-//Listes de listes de rectangles avec couleurs associées
+//Listes de listes de rectangles avec couleurs associï¿½es
 struct ColoredRectangle {
 	Rect rect;
 	vector<int> colors;
@@ -58,4 +58,4 @@ void colorMask(const Mat &img, const Mat&foreground, std::vector<Mat> &rst, vect
 void labelBlobs(const cv::Mat &binary, const Mat &frame, std::vector <ColoredRectangle> &rectangles, DetectionParam param, vector<Vec3b> colorsJerseys, Point pitch[]);
 void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<ColoredRectangle>> &frame_rectangles, DetectionParam param, vector<Vec3b> colorsJerseys, Point pitch[]);
 int detect_colour(const Mat &frame,const ColoredRectangle &rectangle, vector<Vec3b> colorsJersey);
-
+vector<vector<Rect>> get_rectangles(vector<vector<ColoredRectangle>> &colored);

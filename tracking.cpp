@@ -60,7 +60,7 @@ vector<Ptr<TrackerCSRT>> initialize_trackers(vector<Rect> &matched_rectangles, M
 }
 
 
-void record_tracking_rectangles(string VIDEO_FILE_PATH, vector<vector<Rect>> &detected_rectangles, vector<vector<Rect>> &matched_rectangles, vector<vector<Vec3b>> &colours)
+void record_tracking_rectangles(string VIDEO_FILE_PATH, vector<vector<Rect>> &detected_rectangles, vector<vector<Rect>> &matched_rectangles)
 {
 	// Load video
 	VideoCapture video(VIDEO_FILE_PATH);
