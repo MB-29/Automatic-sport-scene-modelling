@@ -6,12 +6,13 @@
 
 // string VIDEO_FILE_PATH = "../input/videos/ShortBasket.mp4";
 // string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/basket_short2.mp4";
-string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/short.mp4";
+// string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/short.mp4";
 // string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis2.mp4";
 // string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis_short.mp4";
+string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis3.mp4";
 
-string above_image_path = "../input/images/pitch_resized.png";
-// string above_image_path = "../input/images/tennis_top.jpg";
+// string above_image_path = "../input/images/pitch_resized.png";
+string above_image_path = "../input/images/tennis_top.jpg";
 string photo_path = "../input/images/photo.jpg";
 
 int main()
