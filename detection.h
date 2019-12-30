@@ -15,7 +15,7 @@
 using namespace std;
 using namespace cv;
 
-struct Detection_param {
+struct DetectionParam {
 	int sizeMinRect;
 	int sizeMaxRect;
 	int sizeMinBlob;
@@ -26,6 +26,24 @@ struct Detection_param {
 	float threshold;
 };
 
+//Listes de listes de rectangles avec couleurs associées
+struct ColoredRectangle {
+	Rect rect;
+	vector<int> colors;
+	vector<Point> blob;
+	ColoredRectangle create_Colored_Rectangle(int sizeColorsJerseys){
+		auto colored_rectangle = ColoredRectangle{};
+		Rect rect_created(0, 0, 0, 0);
+		colored_rectangle.rect = rect_created;
+		vector<int> colors_created;
+		for (int i = 0; i < sizeColorsJerseys; i++) {
+			colors_created.push_back(0);
+		}
+		colored_rectangle.colors = colors_created;
+		return colored_rectangle;
+	}
+};
+
 
 //void initialize_trackers(vector<Rect2d> rectangles, vector<Ptr<TrackerCSRT>> &player_trackers, Mat &frame);
 // void record_hog_rectangles(string video_file_path, vector<vector<Rect>> &frame_rectangles);
@@ -33,12 +51,11 @@ struct Detection_param {
 
 //void add_trackers(vector<Rect> &detected_rectangles, vector<Rect> &matched_rectangles, vector<Ptr<TrackerCSRT>> &player_trackers, Mat &frame);
 
-void moyenneMask(Mat &Moy, string filename);
+Scalar moyenneMask(Mat &Moy, string filename);
 void initializeMask(Mat &foregroundMask, const Mat &frame, const Mat &Moy, float seuil);
-vector<vector<Rect>> filter_rectangles(vector<vector<Rect>> &detection_rectangles, Point pitch[]);
-void colorMask(const Mat &img, const Mat&foreground, Mat &rst, vector<Vec3b> colors, float icolor);
-void labelBlobs(const cv::Mat &binary, std::vector < std::vector<Point> > &blobs, std::vector < cv::Rect> &rects, std::vector <Vec3b> &rectsColors, Detection_param param, vector<Mat> colorMasks, vector<Vec3b> colors);
-void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<Rect>> &frame_rectangles, vector<vector<Vec3b>> &frame_colors, Detection_param param, vector<Vec3b> colorsJerseys);
-vector<vector<Rect>> filter_rectangles(vector<vector<Rect>> &detection_rectangles, Point pitch[]);
-int get_jersey_color(Image<Vec3b> frame, Rect rectangle, Vec3b jersey_colour_1, Vec3b jersey_colour_2);
+bool filter_rectangles(ColoredRectangle rectangle, Point pitch[]);
+void colorMask(const Mat &img, const Mat&foreground, std::vector<Mat> &rst, vector<Vec3b> colors);
+void labelBlobs(const cv::Mat &binary, const Mat &frame, std::vector <ColoredRectangle> &rectangles, DetectionParam param, vector<Vec3b> colorsJerseys, Point pitch[]);
+void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<ColoredRectangle>> &frame_rectangles, DetectionParam param, vector<Vec3b> colorsJerseys, Point pitch[]);
+int detect_colour(const Mat &frame,const ColoredRectangle &rectangle, vector<Vec3b> colorsJersey);
 
