@@ -17,6 +17,7 @@
 
 int main(int argc, char** argv)
 {	
+	// Parse arguments
     const String keys = "{@source | | source video file path }"
 						"{@target | | top view image}";
 
@@ -35,34 +36,34 @@ int main(int argc, char** argv)
 	cout << "Video of " << frame_count << " frames loaded" << endl;
 
 	// Initialize calibration
-	Matches matches;
+	Input input;
 	DetectionParam param;
 	Image<Vec3b> first_frame;
 	video >> first_frame;
 	Image<Vec3b> source_image = first_frame ;
 	Image<Vec3b> target_image = Image<Vec3b>(imread(target_path));
-	matches.source_image = source_image;
-	matches.target_image = target_image;
+	input.source_image = source_image;
+	input.target_image = target_image;
 	imshow("source", source_image);
 	imshow("target", target_image);
 
 	// Find camera view to top view homography.
 	cout << "Point and click to set homographic pairs, then press any key to proceed." << endl;
-	setMouseCallback("source", add_point_source, &matches);
-	setMouseCallback("target", add_point_target, &matches);
+	setMouseCallback("source", add_point_source, &input);
+	setMouseCallback("target", add_point_target, &input);
 	waitKey();
 	// destroyWindow("source");
 	destroyWindow("target");
 	cout << "Computing homography" << endl;
-	matches.homography_matrix = findHomography(matches.source_points, matches.target_points);
-	matches.target_image = Image<Vec3b>(imread(target_path));
+	input.homography_matrix = findHomography(input.source_points, input.target_points);
+	input.target_image = Image<Vec3b>(imread(target_path));
 
 	// Delimit pitch area by pointing and clicking
 	cout << "Point and click to delimit the pitch, press ENTER to validate." << endl;
-	matches.pitch_points_count = 0;
-	setMouseCallback("source", add_pitch_point, &matches);
+	input.pitch_points_count = 0;
+	setMouseCallback("source", add_pitch_point, &input);
 	if (waitKey()==32){
-		if (matches.pitch_points_count < 4){
+		if (input.pitch_points_count < 4){
 			cout << "Error : pitch must be delimited by exactly 4 points" << endl;
 			return 1;
 		}
@@ -70,16 +71,16 @@ int main(int argc, char** argv)
 
 	// Select a player	
 	cout << "Select a player" << endl;
-	matches.player = selectROI("source", source_image);
-	int typical_height = matches.player.height;
+	input.player = selectROI("source", source_image);
+	int typical_height = input.player.height;
 	//int typical_height = 100;
 
 
 	// Select colours
 	cout << "Point and click to select a color, press space to add, press a key validate." << endl;
-	setMouseCallback("source", select_colour, &matches);
+	setMouseCallback("source", select_colour, &input);
 	waitKey();
-	cout << "Number of colours : " << matches.colours.size() << endl;
+	cout << "Number of colours : " << input.colours.size() << endl;
 
 	// Player detection
 	vector<vector<ColoredRectangle>> detected_colored_rectangles;
@@ -94,14 +95,14 @@ int main(int argc, char** argv)
 	param.threshold = 0.5;// En HSV, la distance entre 2 couleurs varie plut�t entre 50000 et 100000. En BGR, entre 0 et 1
 	param.technic = "a";
 	cout << "Detecting rectangles" << endl;
-	record_backgroundsubstract_rectangles(source_path, detected_colored_rectangles, param, matches.colours, matches.pitch);
+	record_backgroundsubstract_rectangles(source_path, detected_colored_rectangles, param, input.colours, input.pitch);
 	// record_detection_rectangles(VIDEO_FILE_PATH, detected_rectangles);
 	cout << "Detection complete" << endl;
 	cout << "Detecting rectangles for " << detected_rectangles.size() << " frames" << endl;
 	detected_rectangles  = get_rectangles(detected_colored_rectangles);
 
 	// Filter rectangles
-	//detected_rectangles = filter_rectangles(detected_rectangles, matches.pitch);
+	//detected_rectangles = filter_rectangles(detected_rectangles, input.pitch);
 	// Je l'ai fait en m�me temps que la d�tection, �a me permettait de le visualiser (Margot)
 
 	// Player tracking
@@ -114,7 +115,7 @@ int main(int argc, char** argv)
 
 	// Plot points on the top view
 	cout << "Starting video homography" << endl;
-	video_homography(source_path, matched_rectangles, &matches);
+	video_homography(source_path, matched_rectangles, &input);
 	cout << "Finished" << endl;
 
 	waitKey();

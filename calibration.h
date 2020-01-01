@@ -13,7 +13,7 @@
 using namespace std;
 using namespace cv;
 
-struct Matches
+struct Input
 {
 	Image<Vec3b> source_image;
 	vector<Point2f> source_points;

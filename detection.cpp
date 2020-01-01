@@ -1,6 +1,5 @@
 #include "detection.h"
 #include "polygon.cpp"
-#include "rectangles.h"
 #include "calibration.h"
 
 
@@ -575,7 +574,7 @@ vector<vector<Rect>> get_rectangles(vector<vector<ColoredRectangle>> &colored){
 // Create a mask image for drawing purposes
 //Mat mask = Mat::zeros(old_frame.size(), old_frame.type());
 
-//setMouseCallback("source", add_point_source, &matches);
+//setMouseCallback("source", add_point_source, &input);
 // 		}
 // 	return;
 // }

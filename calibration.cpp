@@ -5,28 +5,28 @@ void add_point_source(int event, int x, int y, int foo, void *data)
 {
 	if (event != EVENT_LBUTTONDOWN)
 		return;
-	Matches *matches = (Matches *)data;
-	int count = matches->source_points.size();
+	Input *input = (Input *)data;
+	int count = input->source_points.size();
 	cout << "x = " << x << ", y = " << y << endl;
 	Point point = Point(x, y);
-	circle(matches->source_image, point, 2, Scalar(0, 255, 0), 2);
-	putText(matches->source_image, to_string(count), point, FONT_HERSHEY_PLAIN, 2, 2);
-	imshow("source", matches->source_image);
-	matches->source_points.push_back(point);
+	circle(input->source_image, point, 2, Scalar(0, 255, 0), 2);
+	putText(input->source_image, to_string(count), point, FONT_HERSHEY_PLAIN, 2, 2);
+	imshow("source", input->source_image);
+	input->source_points.push_back(point);
 	cout << "size of source points : " << count << endl;
 }
 void add_point_target(int event, int x, int y, int foo, void *data)
 {
 	if (event != EVENT_LBUTTONDOWN)
 		return;
-	Matches *matches = (Matches *)data;
-	int count = matches->target_points.size();
+	Input *input = (Input *)data;
+	int count = input->target_points.size();
 	cout << "x = " << x << ", y = " << y << endl;
 	Point point = Point(x, y);
-	circle(matches->target_image, point, 2, Scalar(0, 255, 0), 2);
-	putText(matches->target_image, to_string(count), point, FONT_HERSHEY_PLAIN, 2, 2);
-	imshow("target", matches->target_image);
-	matches->target_points.push_back(point);
+	circle(input->target_image, point, 2, Scalar(0, 255, 0), 2);
+	putText(input->target_image, to_string(count), point, FONT_HERSHEY_PLAIN, 2, 2);
+	imshow("target", input->target_image);
+	input->target_points.push_back(point);
 	cout << "size of target points : " << count << endl;
 }
 
@@ -54,11 +54,11 @@ void draw_homographic_pair(Point point, Mat homography_matrix, Image<Vec3b> sour
 // Plot player points on top view
 void video_homography(string video_file_path, vector<vector<Rect>> &tracking_rectangles, void *data)
 {
-	Matches *matches = (Matches *)data;
-	Vec3b jersey_color_1 = matches->colours[0];
-	Vec3b jersey_color_2 = matches->colours[1];
-	Mat homography_matrix = matches->homography_matrix;
-	Image<Vec3b> target_image = matches->target_image;
+	Input *input = (Input *)data;
+	Vec3b jersey_color_1 = input->colours[0];
+	Vec3b jersey_color_2 = input->colours[1];
+	Mat homography_matrix = input->homography_matrix;
+	Image<Vec3b> target_image = input->target_image;
 	
 	// Load video and initialize
 	VideoCapture video(video_file_path);
@@ -117,38 +117,38 @@ void select_colour(int event, int x, int y, int foo, void *data)
 	if (event != EVENT_LBUTTONDOWN)
 		return;
 
-	Matches *matches = (Matches *)data;
-	Vec3b colour = matches->source_image(x, y);
-	circle(matches->source_image, Point(x, y), 7, (Scalar)colour, 4);
-	imshow("source", matches->source_image);
-	cout << "selected colour : " << matches->source_image(x, y) << endl;
+	Input *input = (Input *)data;
+	Vec3b colour = input->source_image(x, y);
+	circle(input->source_image, Point(x, y), 7, (Scalar)colour, 4);
+	imshow("source", input->source_image);
+	cout << "selected colour : " << input->source_image(x, y) << endl;
 	if (waitKey() == 32)
 	{
 		Vec3b colour_rgb = Vec3b({colour[2], colour[1], colour[0]});
-		matches->colours.push_back(colour);
-		cout << "Added colour : " << matches->source_image(x, y) << endl;
+		input->colours.push_back(colour);
+		cout << "Added colour : " << input->source_image(x, y) << endl;
 	}
 }
 
 // Delimit the pitch
 void add_pitch_point(int event, int x, int y, int foo, void *data)
 {
-	Matches *matches = (Matches *)data;
+	Input *input = (Input *)data;
 
-	if (event != EVENT_LBUTTONDOWN || matches->pitch_points_count == 4)
+	if (event != EVENT_LBUTTONDOWN || input->pitch_points_count == 4)
 		return;
-	int count = matches->pitch_points_count;
+	int count = input->pitch_points_count;
 	Point point = Point(x, y);
-	circle(matches->source_image, point, 2, Scalar(255, 255, 255), 2);
+	circle(input->source_image, point, 2, Scalar(255, 255, 255), 2);
 	if (count > 0)
-		line(matches->source_image, matches->pitch[count - 1], point, Scalar(0, 0, 255), 2);
+		line(input->source_image, input->pitch[count - 1], point, Scalar(0, 0, 255), 2);
 	if (count == 3)
-		line(matches->source_image, matches->pitch[0], point, Scalar(0, 0, 255), 2);
-	putText(matches->source_image, to_string(count), point, FONT_HERSHEY_PLAIN, 2, 2);
-	imshow("source", matches->source_image);
-	matches->pitch[count] = point;
-	cout << "Added point : " << matches->pitch[count] << endl;
-	matches->pitch_points_count = count + 1;
+		line(input->source_image, input->pitch[0], point, Scalar(0, 0, 255), 2);
+	putText(input->source_image, to_string(count), point, FONT_HERSHEY_PLAIN, 2, 2);
+	imshow("source", input->source_image);
+	input->pitch[count] = point;
+	cout << "Added point : " << input->pitch[count] << endl;
+	input->pitch_points_count = count + 1;
 }
 
 double norm(Vec3b vector){
