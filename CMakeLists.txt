@@ -5,7 +5,7 @@ FIND_PACKAGE(OpenCV REQUIRED)
 PROJECT(Xtracking)
 
 
-ADD_EXECUTABLE(main main.cpp homography.cpp homography.h image.cpp image.h tracking.h tracking.cpp detection.cpp detection.h)
+ADD_EXECUTABLE(main main.cpp calibration.cpp calibration.h image.cpp image.h tracking.h tracking.cpp detection.cpp detection.h)
 # ADD_EXECUTABLE(tracking tracking.cpp tracking.h rectangles.h rectangles.cpp)
 # ADD_EXECUTABLE(detection detection.cpp detection.h rectangles.h rectangles.cpp)
 TARGET_LINK_LIBRARIES(main ${OpenCV_LIBS})

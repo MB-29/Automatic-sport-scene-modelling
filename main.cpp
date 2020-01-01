@@ -1,5 +1,5 @@
 
-#include "homography.h"
+#include "calibration.h"
 #include "tracking.h"
 #include "detection.h"
 
@@ -12,7 +12,7 @@
 string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis3.mp4";
 
 // string above_image_path = "../input/images/pitch_resized.png";
-string above_image_path = "../input/images/tennis_top.jpg";
+string above_image_path = "../input/images/tennis_court.png";
 string photo_path = "../input/images/photo.jpg";
 
 int main()

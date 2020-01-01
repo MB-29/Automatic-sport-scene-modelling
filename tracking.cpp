@@ -3,6 +3,7 @@
 float AREA_OVERLAP_THRESHOLD = 0.2;
 float AREA_INCLUSION_THRESHOLD = 0.8;
 
+// Determine weather two rectangles overlap or not, according to arbitrary constants
 bool overlap(Rect new_rectangle, vector<Rect> tracking_rectangles)
 {
 	int tracked_players_count = tracking_rectangles.size();
@@ -17,6 +18,7 @@ bool overlap(Rect new_rectangle, vector<Rect> tracking_rectangles)
 	return false;
 }
 
+// 
 vector<Rect> choose_rectangles(vector<Rect> &frame_detected_rectangles, vector<Rect> &frame_tracking_rectangles)
 {
 	vector<Rect> matched_rectangles = frame_tracking_rectangles;
@@ -71,25 +73,13 @@ void record_tracking_rectangles(string VIDEO_FILE_PATH, vector<vector<Rect>> &de
 	int frame_index = 0;
 
 	vector<Rect> frame_detected_rectangles = detected_rectangles[0];
-	// if (frame_detected_rectangles.size() == 0)
-	// {
-	// 	cout << "No rectangles found to inititalize tracking, please select one." << endl;
-	// 	Rect window = selectROI("select tracker", frame);
-	// 	frame_detected_rectangles.push_back(window);
-	// 	destroyWindow("select tracker");
-	// }
-
-	// Initialize trackers from detected rectangles
-
 	vector<Rect> frame_matched_rectangles = frame_detected_rectangles;
 	matched_rectangles.push_back(frame_matched_rectangles);
 	vector<Ptr<TrackerCSRT>> player_trackers = initialize_trackers(frame_matched_rectangles, frame);
-	// add_trackers(frame_detected_rectangles, frame_tracking_rectangles, player_trackers, frame);
 
 	while (1)
 	{
-		// cout << "Reading frame " << frame_index << endl;
-		// If the frame is empty, break immediately
+		// If the frame is empty, break 
 		if (frame.empty())
 		{
 			cout << "problem" << endl;
@@ -97,23 +87,8 @@ void record_tracking_rectangles(string VIDEO_FILE_PATH, vector<vector<Rect>> &de
 		}
 
 		vector<Rect> frame_detected_rectangles = detected_rectangles[frame_index];
-		// cout << "detected rectangles count : " << frame_detected_rectangles.size() << endl;
-		// Show detection rectangles
-		// for (int rectangle_index = 0; rectangle_index < frame_detected_rectangles.size(); rectangle_index++)
-		// {
-		// 	Rect2d window = frame_detected_rectangles[rectangle_index];
-		// 	rectangle(frame, window, Scalar(0, 0, 255), 2, 1);
-		// }
 		imshow("Tracking", frame);
-
 		assert(player_trackers.size() == frame_matched_rectangles.size());
-
-		// Show previously matched rectangles
-		// for (int rectangle_index = 0; rectangle_index < frame_matched_rectangles.size(); rectangle_index++)
-		// {
-		// 	Rect2d window = frame_matched_rectangles[rectangle_index];
-		// 	rectangle(frame, window, Scalar(0, 0, 0), 2, 1);
-		// }
 		imshow("Tracking", frame);
 
 		// Update trackers initialized from matched rectangles of the previous frame
@@ -124,18 +99,11 @@ void record_tracking_rectangles(string VIDEO_FILE_PATH, vector<vector<Rect>> &de
 			Rect2d window = (Rect2d)frame_matched_rectangles[rectangle_index];
 			tracker->update(frame, window);
 			frame_tracking_rectangles.push_back((Rect)window);
-			// rectangle(frame, frame_tracking_rectangles[rectangle_index], Scalar(255, 0, 0), 2, 1);
 		}
 		imshow("Tracking", frame);
 
 		// Matched rectangles are chosen among tracking rectangles and detected rectangles
-		// cout << "Choosing matched rectangles " << endl;
 		frame_matched_rectangles = choose_rectangles(frame_detected_rectangles, frame_tracking_rectangles);
-		// cout << "matched rectangles count : " << frame_matched_rectangles.size() << endl;
-
-		// Add matched rectangles to the output vector
-		// vector<Rect> detected_rectangles = detected_rectangles_iterator[frame_index];
-		// add_trackers(detected_rectangles, frame_matched_rectangles, player_trackers, frame);
 		matched_rectangles.push_back(frame_matched_rectangles);
 
 		// Show newly matched rectangles
@@ -148,6 +116,7 @@ void record_tracking_rectangles(string VIDEO_FILE_PATH, vector<vector<Rect>> &de
 
 		}
 		imshow("Tracking", frame);
+
 		// Initialize trackers from matched rectangles
 		player_trackers = initialize_trackers(frame_matched_rectangles, frame);
 
@@ -156,7 +125,6 @@ void record_tracking_rectangles(string VIDEO_FILE_PATH, vector<vector<Rect>> &de
 		// Next frame
 		video.read(frame);
 		frame_index++;
-		// waitKey();
 
 		// Press ESC to stop
 		if (waitKey(1) == 27)
@@ -166,67 +134,3 @@ void record_tracking_rectangles(string VIDEO_FILE_PATH, vector<vector<Rect>> &de
 	destroyWindow("Tracking");
 }
 
-
-
-// void record_detection_rectangles(string video_file_path, vector<vector<Rect>> &detected_rectangles)
-// {
-// 	float weight_threshold = 0.0;
-// 	int frame_index = 0;
-// 	VideoCapture video(video_file_path);
-
-// 	// Check if camera opened successfully
-// 	if (!video.isOpened())
-// 	{
-// 		cout << "Error opening video stream or file" << endl;
-// 	};
-// 	Mat frame;
-// 	video >> frame;
-
-// 	// Pedestrian recordor
-// 	HOGDescriptor detection;
-// 	detection.setSVMDetector(HOGDescriptor::getDefaultPeopleDetector());
-
-// 	while (1)
-// 	{
-
-// 		// Capture frame-by-frame
-// 		video.read(frame);
-// 		// cout << "frame index : " << frame_index << endl;
-
-// 		// If the frame is empty, break immediately
-// 		if (frame.empty())
-// 		{
-// 			cout << "Could not read frame " << frame_index << endl;
-// 			break;
-// 		}
-
-// 		vector<Rect> recordion_rectangles;
-// 		vector<double> weights;
-
-// 		Mat gray_frame;
-// 		cvtColor(frame, gray_frame, COLOR_BGR2GRAY);
-// 		detection.detectMultiScale(gray_frame, recordion_rectangles, weights);
-// 		int detection_rectangle_count = recordion_rectangles.size();
-// 		// cout << "recordion complete, number of reactangles deteceted : " << detection_rectangle_count << endl;
-
-// 		detected_rectangles.push_back(recordion_rectangles);
-// 		/// draw recordions
-// 		for (size_t i = 0; i < detection_rectangle_count; i++)
-// 		{
-// 			if (weights[i] < weight_threshold)
-// 				continue;
-// 			rectangle(gray_frame, recordion_rectangles[i], cv::Scalar(0, 0, 255), 3);
-// 		}
-
-// 		// Display the resulting frame
-// 		imshow("HOG detection", gray_frame);
-
-// 		// Press ESC to stop
-// 		if (waitKey(1) == 27)
-// 			break;
-
-// 		frame_index++;
-// 	}
-// 	video.release();
-// 	destroyWindow("HOG detection");
-// }
