@@ -1,13 +1,26 @@
 # Automatic sport scene modelling
 
+## Demo
+[Demo video on YouTube](https://www.youtube.com/watch?v=p3PAhbZSOk4)
+
 ## Input 
 Sport scene video, with fixed camera
 ![input](demo/input.png)
+## Output
+![ouput](demo/output.png)
+
 ## Pipeline
-* Calibrating : compute homography
+* Calibration, computation of the homography matrix
 * Detect players by foreground detection
 * Track players choosing the best rectangles
 * Project players on top view image by applying homography
 
-## Output
-![ouput](demo/output.png)
+
+## Start
+
+```bash
+mkdir build
+cd build
+cmake ..
+./main [path to video file] [path to top view image]
+```

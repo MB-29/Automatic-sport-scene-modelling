@@ -9,17 +9,23 @@
 // string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/short.mp4";
 // string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis2.mp4";
 // string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis_short.mp4";
-string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis3.mp4";
+// string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis3.mp4";
 
 // string above_image_path = "../input/images/pitch_resized.png";
-string above_image_path = "../input/images/tennis_court.png";
-string photo_path = "../input/images/photo.jpg";
+// string above_image_path = "../input/images/tennis_court.png";
+// string photo_path = "../input/images/photo.jpg";
 
-int main()
+int main(int argc, char** argv)
 {	
+    const String keys = "{@source | | source video file path }"
+						"{@target | | top view image}";
+
+	CommandLineParser parser(argc, argv, keys);
+	String source_path = parser.get<String>(0);
+	String target_path = parser.get<String>(1);
 
 	// Load video
-	VideoCapture video(VIDEO_FILE_PATH);
+	VideoCapture video(source_path);
 	if (!video.isOpened())
 	{
 		cout << "Error opening video stream or file" << endl;
@@ -34,7 +40,7 @@ int main()
 	Image<Vec3b> first_frame;
 	video >> first_frame;
 	Image<Vec3b> source_image = first_frame ;
-	Image<Vec3b> target_image = Image<Vec3b>(imread(above_image_path));
+	Image<Vec3b> target_image = Image<Vec3b>(imread(target_path));
 	matches.source_image = source_image;
 	matches.target_image = target_image;
 	imshow("source", source_image);
@@ -49,7 +55,7 @@ int main()
 	destroyWindow("target");
 	cout << "Computing homography" << endl;
 	matches.homography_matrix = findHomography(matches.source_points, matches.target_points);
-	matches.target_image = Image<Vec3b>(imread(above_image_path));
+	matches.target_image = Image<Vec3b>(imread(target_path));
 
 	// Delimit pitch area by pointing and clicking
 	cout << "Point and click to delimit the pitch, press ENTER to validate." << endl;
@@ -88,7 +94,7 @@ int main()
 	param.threshold = 0.5;// En HSV, la distance entre 2 couleurs varie plut�t entre 50000 et 100000. En BGR, entre 0 et 1
 	param.technic = "a";
 	cout << "Detecting rectangles" << endl;
-	record_backgroundsubstract_rectangles(VIDEO_FILE_PATH, detected_colored_rectangles, param, matches.colours, matches.pitch);
+	record_backgroundsubstract_rectangles(source_path, detected_colored_rectangles, param, matches.colours, matches.pitch);
 	// record_detection_rectangles(VIDEO_FILE_PATH, detected_rectangles);
 	cout << "Detection complete" << endl;
 	cout << "Detecting rectangles for " << detected_rectangles.size() << " frames" << endl;
@@ -101,14 +107,14 @@ int main()
 	// Player tracking
 
 	vector<vector<Rect>> matched_rectangles;
-	record_tracking_rectangles(VIDEO_FILE_PATH, detected_rectangles, matched_rectangles);
+	record_tracking_rectangles(source_path, detected_rectangles, matched_rectangles);
 	cout << "Tracking complete" << endl;
 	cout << "Tracking vector has "<< matched_rectangles.size()<< " elements" << endl;
 
 
 	// Plot points on the top view
 	cout << "Starting video homography" << endl;
-	video_homography(VIDEO_FILE_PATH, matched_rectangles, &matches);
+	video_homography(source_path, matched_rectangles, &matches);
 	cout << "Finished" << endl;
 
 	waitKey();
