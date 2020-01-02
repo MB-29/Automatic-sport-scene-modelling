@@ -16,7 +16,7 @@ Sport scene video, with fixed camera
 * Project players on top view image by applying homography
 
 
-## Start
+## Run the program
 
 ```bash
 mkdir build
