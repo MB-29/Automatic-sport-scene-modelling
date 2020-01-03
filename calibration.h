@@ -25,11 +25,6 @@ struct Input
 	Point pitch[4];
 	int pitch_points_count;
 };
-struct pitch
-{
-	Image<Vec3b> source_image;
-	vector<Point> polygon_points;
-};
 
 void add_point_source(int event, int x, int y, int foo, void *data);
 void add_point_target(int event, int x, int y, int foo, void *data);

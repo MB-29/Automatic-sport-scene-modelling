@@ -70,14 +70,14 @@ int main(int argc, char** argv)
 	}
 
 	// Select a player	
-	cout << "Select a player" << endl;
+	cout << "Click and drag to delimit a player" << endl;
 	input.player = selectROI("source", source_image);
 	int typical_height = input.player.height;
 	//int typical_height = 100;
 
 
 	// Select colours
-	cout << "Point and click to select a color, press space to add, press a key validate." << endl;
+	cout << "Point and click to select a jersey colour, press SPACE to add, press any key to validate." << endl;
 	setMouseCallback("source", select_colour, &input);
 	waitKey();
 	cout << "Number of colours : " << input.colours.size() << endl;
