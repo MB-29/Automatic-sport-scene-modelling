@@ -82,7 +82,7 @@ void initializeMask(Mat &foregroundMask, const Mat &frame, const Mat &Moy, float
 			}
 		}
 	}
-	imshow("maaskMoy", foregroundMask);
+	imshow("maskMoy", foregroundMask);
 }
 
 void colorMask(const Mat &img, const Mat&foreground, std::vector<Mat> &rst, vector<Vec3b> colorsJersey) {
@@ -245,7 +245,8 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 	int frame_index = 1;
 
 	// main loop to grab sequence of input files
-	for (;;)
+	//for (;;)
+	while(frame_index < 15)
 	{
 
 		bool ok = cap.grab();
@@ -343,7 +344,7 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 		imshow("foreground mask", foregroundMask);
 		imshow("foreground image", foregroundImgWithRect);
 
-		// waitKey();
+		//waitKey();
 		if (waitKey(25) == 27)
 			break;
 
@@ -408,7 +409,7 @@ int detect_colour(const Mat &frame, const ColoredRectangle &rectangle, vector<Ve
 		int t = points.size();
 		Mat_<Vec3b> matColorBGR(1, c);
 		Mat_<Vec3b> matColorHSV(1, c);
-		Mat_<int> distColor(t, 1, CV_32FC1);
+		Mat_<int> distColor(c, 1, CV_32FC1);
 		for (int l = 0; l < c; l++) {
 			distColor.at<int>(l, 0) = 0;
 		}
@@ -448,7 +449,7 @@ int detect_colour(const Mat &frame, const ColoredRectangle &rectangle, vector<Ve
 				iColorMaj = l;
 			}
 		}
-		cout << "dist" << distColor.at<int>(iColorMaj, 0) << "et" << t << endl;
+
 		if (distColor.at<int>(iColorMaj, 0) < (t / param.proportioncolour)) { // Mais si ça ne représente pas au moins 1/2 (limite arbitraire aussi...) des points du blob...
 			iColorMaj = c - 1;
 		}

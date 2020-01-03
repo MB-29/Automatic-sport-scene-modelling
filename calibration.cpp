@@ -34,12 +34,15 @@ void add_point_target(int event, int x, int y, int foo, void *data)
 Point homographic_transformation(const Mat &homography_matrix, Point input_point)
 {
 	Vec3d input_point_3D(input_point.x, input_point.y, 1);
-	cout << " computing homographic output" << endl;
-	cout << (Mat)input_point_3D << homography_matrix << endl;
-	Mat output = homography_matrix * ((Mat)input_point_3D);
+	//cout << " computing homographic output" << endl;
+	//cout << (Mat)input_point_3D << homography_matrix << endl;
+	Mat_<double> output = homography_matrix * ((Mat)input_point_3D);
 	double u = output.at<double>(0, 0);
-	double v = output.at<double>(0, 1);
-	double w = output.at<double>(0, 2);
+	double v = output.at<double>(1, 0);
+	double w = output.at<double>(2, 0);
+	//double u = output.at<double>(0, 0);
+	//double v = output.at<double>(1, 0);
+	//double w = output.at<double>(2, 0);
 	return Point(u / w, v / w);
 }
 
@@ -83,7 +86,11 @@ void video_homography(string video_file_path, vector<vector<Rect>> &tracking_rec
 
 		Image<Vec3b> source_image(frame);
 		Image<Vec3b> frame_target_image = (Image<Vec3b>)target_image.clone();
-		vector<Rect> frame_tracking_rectangles = *(tracking_rectangles_iterator);
+		//vector<Rect> frame_tracking_rectangles = *(tracking_rectangles_iterator);
+		vector<Rect> frame_tracking_rectangles = tracking_rectangles[frame_index];
+		vector<Point> team1, team2, convexHull1, convexHull2;
+		double areaTeam1 = 0;
+		double areaTeam2 = 0;
 
 		// Plot points on both source and target images
 		for (int rectangle_index = 0; rectangle_index < frame_tracking_rectangles.size(); rectangle_index++)
@@ -93,10 +100,35 @@ void video_homography(string video_file_path, vector<vector<Rect>> &tracking_rec
 			float x = player_rectangle.x + player_rectangle.width / 2;
 			float y = player_rectangle.y + player_rectangle.height;
 			Point point(x, y);
-			cout << "jersey_colour "<< endl;
-			int colour_index = detect_colour(frame, player_rectangle, colorsJerseys, param);
+			int colour_index = detect_colour(source_image, player_rectangle, colorsJerseys, param);
+			cout << "jersey_colour" << colour_index << "et" << player_rectangle << endl;
+			if (colour_index == 0) {
+				team1.push_back(homographic_transformation(homography_matrix, point));
+			}
+			else {
+				team2.push_back(homographic_transformation(homography_matrix, point));
+			}
 			Vec3b colour = colorsJerseys[colour_index];
 			draw_homographic_pair(point, homography_matrix, source_image, frame_target_image, colour);
+		}
+
+		cout << team1 << endl;
+		cout << team2 << endl;
+
+		if (team1.size() > 0) {
+			convexHull(team1, convexHull1);
+			areaTeam1 = contourArea(convexHull1);
+		}
+		if (team2.size() > 0) {
+			convexHull(team2, convexHull2);
+			areaTeam2 = contourArea(convexHull2);
+		}
+
+		if (areaTeam1 > areaTeam2) {
+			cout << "L'equipe 1 couvre plus de terrain, avec " << areaTeam1 << " pixels contre " << areaTeam2 << endl;
+		}
+		else {
+			cout << "L'equipe 2 couvre plus de terrain, avec " << areaTeam2 << " pixels contre " << areaTeam1 << endl;
 		}
 
 		// Increment

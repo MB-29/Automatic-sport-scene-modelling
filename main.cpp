@@ -58,6 +58,7 @@ int main(int argc, char** argv)
 	destroyWindow("target");
 	cout << "Computing homography" << endl;
 	input.homography_matrix = findHomography(input.source_points, input.target_points);
+	cout << input.homography_matrix << endl;
 	input.target_image = Image<Vec3b>(imread(target_path));
 
 	// Delimit pitch area by pointing and clicking
@@ -104,6 +105,8 @@ int main(int argc, char** argv)
 	cout << "Detection complete" << endl;
 	cout << "Detecting rectangles for " << detected_rectangles.size() << " frames" << endl;
 	detected_rectangles  = get_rectangles(detected_colored_rectangles);
+
+	video_homography(source_path, detected_rectangles, &input, input.colours, param);
 
 	// Filter rectangles
 	//detected_rectangles = filter_rectangles(detected_rectangles, input.pitch);
