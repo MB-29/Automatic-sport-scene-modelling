@@ -1,4 +1,5 @@
 #include "calibration.h"
+#include "detection.h"
 
 // Homographic pairs
 void add_point_source(int event, int x, int y, int foo, void *data)
@@ -52,7 +53,7 @@ void draw_homographic_pair(Point point, Mat homography_matrix, Image<Vec3b> sour
 }
 
 // Plot player points on top view
-void video_homography(string video_file_path, vector<vector<Rect>> &tracking_rectangles, void *data)
+void video_homography(string video_file_path, vector<vector<Rect>> &tracking_rectangles, void *data, vector<Vec3b> colorsJerseys, DetectionParam param)
 {
 	Input *input = (Input *)data;
 	Vec3b jersey_color_1 = input->colours[0];
@@ -93,8 +94,8 @@ void video_homography(string video_file_path, vector<vector<Rect>> &tracking_rec
 			float y = player_rectangle.y + player_rectangle.height;
 			Point point(x, y);
 			cout << "jersey_colour "<< endl;
-			int colour_index = get_jersey_colour(frame, player_rectangle, jersey_color_1, jersey_color_2);
-			Vec3b colour = colour_index == 0 ? jersey_color_1 : jersey_color_2;
+			int colour_index = detect_colour(frame, player_rectangle, colorsJerseys, param);
+			Vec3b colour = colorsJerseys[colour_index];
 			draw_homographic_pair(point, homography_matrix, source_image, frame_target_image, colour);
 		}
 

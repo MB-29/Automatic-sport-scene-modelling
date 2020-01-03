@@ -24,6 +24,8 @@ struct DetectionParam {
 	int history;
 	int gaussianSize;
 	float threshold;
+	int proportioncolour;
+	int thresholdcolour;
 };
 
 //Listes de listes de rectangles avec couleurs associ�es
@@ -44,6 +46,25 @@ struct ColoredRectangle {
 	}
 };
 
+struct Input
+{
+	Image<Vec3b> source_image;
+	vector<Point2f> source_points;
+	Image<Vec3b> target_image;
+	vector<Point2f> target_points;
+	Mat homography_matrix;
+	vector<Vec3b> colours;
+	Rect player;
+	Point pitch[4];
+	int pitch_points_count;
+};
+
+struct pitch
+{
+	Image<Vec3b> source_image;
+	vector<Point> polygon_points;
+};
+
 
 //void initialize_trackers(vector<Rect2d> rectangles, vector<Ptr<TrackerCSRT>> &player_trackers, Mat &frame);
 // void record_hog_rectangles(string video_file_path, vector<vector<Rect>> &frame_rectangles);
@@ -53,9 +74,10 @@ struct ColoredRectangle {
 
 Scalar moyenneMask(Mat &Moy, string filename);
 void initializeMask(Mat &foregroundMask, const Mat &frame, const Mat &Moy, float seuil);
-bool filter_rectangles(ColoredRectangle rectangle, Point pitch[]);
+bool filter_rectangles(Rect rectangle, Point pitch[]);
 void colorMask(const Mat &img, const Mat&foreground, std::vector<Mat> &rst, vector<Vec3b> colors);
 void labelBlobs(const cv::Mat &binary, const Mat &frame, std::vector <ColoredRectangle> &rectangles, DetectionParam param, vector<Vec3b> colorsJerseys, Point pitch[]);
-void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<ColoredRectangle>> &frame_rectangles, DetectionParam param, vector<Vec3b> colorsJerseys, Point pitch[]);
-int detect_colour(const Mat &frame,const ColoredRectangle &rectangle, vector<Vec3b> colorsJersey);
+void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<ColoredRectangle>> &frame_rectangles, DetectionParam param, Input input);
+int detect_colour(const Mat &frame,const ColoredRectangle &rectangle, vector<Vec3b> colorsJersey, DetectionParam param);
+int detect_colour(const Mat &frame, const Rect &rectangle, vector<Vec3b> colorsJersey, DetectionParam param);
 vector<vector<Rect>> get_rectangles(vector<vector<ColoredRectangle>> &colored);
