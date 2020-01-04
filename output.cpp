@@ -3,14 +3,12 @@
 #include "image.h"
 
 // Plot player points on top view and export 
-Mat video_homography(string video_file_path, vector<vector<Rect>> &tracking_rectangles, void *data, DetectionParam param)
+Image<Vec3b> video_homography(string video_file_path, vector<vector<Rect>> &tracking_rectangles, void *data, DetectionParam param)
 {
 	Input *input = (Input *)data;
-	Vec3b jersey_color_1 = input->colours[0];
-	Vec3b jersey_color_2 = input->colours[1];
 	Mat homography_matrix = input->homography_matrix;
 	Image<Vec3b> target_image = input->target_image;
-	Mat positions(target_image.height(), target_image.width(), CV_8U, Scalar(255));
+	Image<Vec3b> cumulated_positions (input->target_image.clone());
 
 	
 	// Load video and initialize
@@ -47,11 +45,15 @@ Mat video_homography(string video_file_path, vector<vector<Rect>> &tracking_rect
 			float y = player_rectangle.y + player_rectangle.height;
 			Point point(x, y);
 
-			int colour_index = detect_colour(source_image, player_rectangle, input->colours, param);			Vec3b colour = colour_index == 0 ? jersey_color_1 : jersey_color_2;
+			int colour_index = detect_colour(source_image, player_rectangle, input->colours, param);
+
+            // If detected colour does not match any of the selected colours, -1 and returned and no point is plotted
+            if (colour_index < 0) continue; 
+            Vec3b colour = input->colours[colour_index   ];
 			circle(frame, point, 2, colour, 2);
 			Point target_point = homographic_transformation(homography_matrix, point);
 			circle(frame_target_image, target_point, 2, colour, 2);
-			positions.at<uchar>(target_point.y, target_point.x) = 0;
+			circle(cumulated_positions, target_point, 2, colour, 2);
 		}
 		imshow("top view", frame_target_image);
 
@@ -60,18 +62,12 @@ Mat video_homography(string video_file_path, vector<vector<Rect>> &tracking_rect
 		frame_index += 1;
 		video.read(frame);
 		
-		// waitKey();
+		waitKey();
 		// Press ESC to stop
 		if (waitKey(1) == 27)
 			break;
 
 	}
 	video.release();
-
-	Mat draw;
-	distanceTransform(positions, draw, DIST_L2,5);
-	draw.convertTo(draw,CV_8U,10);
-	applyColorMap(draw,draw, cv::COLORMAP_JET);
-	imshow("jetmap",draw);
-	return draw;
+    return cumulated_positions;
 }

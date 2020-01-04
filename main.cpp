@@ -97,7 +97,8 @@ int main(int argc, char** argv)
 
 	// Plot points on the top view 
 	cout << "Displaying output. Press any key to go forward." << endl;
-	video_homography(source_path, matched_rectangles, &input, param);
+	Image<Vec3b> cumulated_positions = video_homography(source_path, matched_rectangles, &input, param);
+	imshow ("cumulated positions", cumulated_positions);
 
 	waitKey();
 	return 0;
