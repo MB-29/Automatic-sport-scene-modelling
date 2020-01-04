@@ -106,7 +106,6 @@ int main(int argc, char** argv)
 	cout << "Detecting rectangles for " << detected_rectangles.size() << " frames" << endl;
 	detected_rectangles  = get_rectangles(detected_colored_rectangles);
 
-	video_homography(source_path, detected_rectangles, &input, input.colours, param);
 
 	// Filter rectangles
 	//detected_rectangles = filter_rectangles(detected_rectangles, input.pitch);
