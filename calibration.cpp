@@ -89,20 +89,3 @@ double norm(Vec3b vector){
 	}
 	return sqrt(squared_norm);
 }
-
-int get_jersey_colour(Mat &frame, Rect rectangle, Vec3b jersey_colour_1, Vec3b jersey_colour_2)
-{
-	Image<Vec3b> image(frame);
-	double distance_1 = 0, distance_2 = 0;
-	for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++)
-	{
-		for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++)
-		{
-			Vec3b pixel_colour = image(x, y);
-			distance_1 +=  norm(pixel_colour - jersey_colour_1);
-			distance_1 +=  norm(pixel_colour - jersey_colour_1);
-		}
-	}
-	if (distance_1 < distance_2) return 0;
-	return 1; 
-}
