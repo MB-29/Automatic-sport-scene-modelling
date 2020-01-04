@@ -2,7 +2,7 @@
 #include "calibration.h"
 #include "tracking.h"
 #include "detection.h"
-#include "output.cpp"
+#include "output.h"
 
 int main(int argc, char** argv)
 {	

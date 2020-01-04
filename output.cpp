@@ -2,7 +2,7 @@
 #include "detection.h"
 #include "image.h"
 
-// Plot player points on top view and export 
+// Plot player points on top view
 Image<Vec3b> video_homography(string video_file_path, vector<vector<Rect>> &tracking_rectangles, void *data, DetectionParam param)
 {
 	Input *input = (Input *)data;
