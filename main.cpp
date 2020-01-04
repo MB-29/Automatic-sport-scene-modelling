@@ -1,6 +1,6 @@
 
 #include "calibration.h"
-#include "tracking.h"
+//#include "tracking.h"
 #include "detection.h"
 #include "output.h"
 
@@ -71,6 +71,7 @@ int main(int argc, char** argv)
 	vector<vector<ColoredRectangle>> detected_colored_rectangles;
 	vector<vector<Rect>> detected_rectangles;
 
+	// Set the most adapted parameters for detection
 	param.history = 5;
 	param.sizeMinRect = 0.4*typical_height;
 	param.sizeMaxRect = 1.5*typical_height;
@@ -78,7 +79,7 @@ int main(int argc, char** argv)
 	param.sizeMinBlob = 300;
 	param.blobFlag = false;
 	param.threshold = 0.5;
-	param.technic = "a";
+	param.technic = "KNN";
 	param.proportioncolour = 100;
 	cout << "Detecting rectangles" << endl;
 	record_backgroundsubstract_rectangles(source_path, detected_colored_rectangles, param, input);

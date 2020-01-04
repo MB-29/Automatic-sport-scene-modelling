@@ -3,11 +3,9 @@
 #include "polygon.cpp"
 
 
-// ColoredRectangle dans tracking.cpp
-// Améliorer détection couleurs
-// Taille des joueurs avec perspective
-// Statistiques à faire ??
 
+// Computes the mean colour of each pixel during the video
+// Returns the mean of these means
 Scalar moyenneMask(Mat &Moy, string filename)
 {
 	VideoCapture capInit(filename);
@@ -25,7 +23,6 @@ Scalar moyenneMask(Mat &Moy, string filename)
 	int m = img.rows;
 	Image<Vec3f> Interm, Interm2;
 	img.convertTo(Moy, CV_32F, 1 / (255.0 * frame_count));
-	//cvtColor(Moy, Moy, COLOR_BGR2HSV);
 
 
 	for (;;)
@@ -41,13 +38,9 @@ Scalar moyenneMask(Mat &Moy, string filename)
 		else
 		{
 
-			// obtain input image from source
 			capInit.retrieve(img, CAP_OPENNI_BGR_IMAGE);
 			img.convertTo(Interm, CV_32F, 1 / (255.0 * frame_count));
-			//cvtColor(Interm, Interm, COLOR_BGR2HSV);
 			img.convertTo(Interm2, CV_32F);
-			//cvtColor(Interm2, Interm2, COLOR_BGR2HSV);
-			//cv::divide(Interm, cv::Scalar((float)frame_count, (float)frame_count, (float)frame_count), Interm, 1, CV_32F);
 			add(Moy, Interm, Moy);
 			meanColour.push_back(mean(Interm2));
 			i++;
@@ -61,12 +54,11 @@ Scalar moyenneMask(Mat &Moy, string filename)
 	return globalMeanColour;
 }
 
+// Computes a foregroundMask by comparing the frame and the Mean image computed by moyenneMask()
 void initializeMask(Mat &foregroundMask, const Mat &frame, const Mat &Moy, float seuil)
 {
 	Image<Vec3f> imgFloat;
 	frame.convertTo(imgFloat, CV_32F, 1 / 255.0);
-	//cvtColor(imgFloat, imgFloat, COLOR_BGR2HSV);
-	// waitKey();
 	int n = frame.cols;
 	int m = frame.rows;
 	for (int i = 0; i < m; i++)
@@ -86,45 +78,7 @@ void initializeMask(Mat &foregroundMask, const Mat &frame, const Mat &Moy, float
 	imshow("maskMoy", foregroundMask);
 }
 
-void colorMask(const Mat &img, const Mat&foreground, std::vector<Mat> &rst, vector<Vec3b> colorsJersey) {
-	
-	if (!rst.empty()) {
-		rst.clear();
-	}
-	
-	Image<Vec3b> imgHSV;
-	int c = colorsJersey.size();
-	Mat_<Vec3b> matColorBGR(1, colorsJersey.size());
-	Mat_<Vec3b> matColorHSV(1, colorsJersey.size());
-
-	for (int r = 0; r < c; r++) {
-		matColorBGR.at<Vec3b>(0, r) = colorsJersey[r] ;
-	}
-
-	cvtColor(matColorBGR, matColorHSV, COLOR_BGR2HSV);
-	cvtColor(img, imgHSV, COLOR_BGR2HSV);
-	int n = imgHSV.cols;
-	int m = imgHSV.rows;
-
-	for (int r = 0; r < c; r++) {
-		Mat maskUnit;
-		maskUnit.create(img.size(), CV_8U);
-		for (int i = 0; i < m; i++) {
-			for (int j = 0; j < n; j++) {
-				if (foreground.at<uchar>(i, j) == 255) {
-					
-					maskUnit.at<uchar>(i, j) += (int)(norm(imgHSV.at<Vec3b>(i, j), matColorHSV.at<Vec3b>(0, r), NORM_L2));
-				}
-				else {
-					maskUnit.at<uchar>(i, j) = 0;
-				}
-
-			}
-		}
-		rst.push_back(maskUnit);
-	}
-}
-
+// Computes the connected components of the foregroundMask
 void labelBlobs(const cv::Mat &binary, const Mat &frame, std::vector <ColoredRectangle> &rectangles, DetectionParam param, vector<Vec3b> colorsJerseys, Point pitch[])
 {
 	rectangles.clear();
@@ -167,12 +121,15 @@ void labelBlobs(const cv::Mat &binary, const Mat &frame, std::vector <ColoredRec
 				Rect rectToFill;
 
 				cv::floodFill(label_image, mask, cv::Point(x, y), cv::Scalar(label_count), &rectToFill, cv::Scalar(0), cv::Scalar(1), 8);
-				// loDiff (maximal lower diff to connect), upDiff (maximal upper diff to connect), $rect : output minimal bounding rectangle
-				// last arguments : 4 if only 4 neighbours checked ; 8 is 8 of them
+				// loDiff (maximal lower diff to connect) = 0
+				// upDiff (maximal upper diff to connect) = 1
+				// last arguments : 4 if only 4 neighbours are being checked ; 8 is 8 neighbours are being checked
 				std::vector<Point> blob;
 				rectangle.rect = rectToFill;
 
-				if (filter_rectangles(rectangle.rect, pitch)==true) {
+				
+				if (filter_rectangles(rectangle.rect, pitch)==true) {// The rectangle is kept only if it has a corner inside the pitch 
+					// Creates a blob (list of Point) with all the points of the connected component
 					for (int i = rectangle.rect.y; i < (rectangle.rect.y + rectangle.rect.height); i++)
 					{
 						for (int j = rectangle.rect.x; j < (rectangle.rect.x + rectangle.rect.width); j++)
@@ -185,16 +142,16 @@ void labelBlobs(const cv::Mat &binary, const Mat &frame, std::vector <ColoredRec
 						}
 					}
 
-
+					// Detects the colour of the player's jersey
+					// This colour will be computed again after the tracking, and this time we will suppress the rectangles with colour "-1"
 					if (((param.blobFlag) && (blob.size() > param.sizeMinBlob)) || (!param.blobFlag)) {
 						if ((rectangle.rect.height > param.sizeMinRect) && (rectangle.rect.height < param.sizeMaxRect)) {
 							rectangle.blob = blob;
-							int icolour = detect_colour(frame, rectangle.rect, colorsJerseys, param); // Nous utilisons finalement la version de detect_colour qui s'applique aux rectangles, pour laquelle les seuils utilisés sont plus adaptés
-							rectangle.colors[icolour] = 1;
-							// cout << colorsJerseys[icolour] << endl;
-							//if (icolour != (c - 1)) { //On utilise cette condition plus tard sur les rectangles tracés
-								rectangles.push_back(rectangle);
-							//}
+							int icolour = detect_colour(frame, rectangle.rect, colorsJerseys, param); // We use the version of detect_colour taking "Rect" as arguments because its parameters are more adapted
+							if (icolour != (-1)) {
+								rectangle.colors[icolour] = 1; // We save the colour of the rectangle, to show it with the right colour after
+							}
+							rectangles.push_back(rectangle);
 						}
 					}
 				}
@@ -210,33 +167,23 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 {
 
 	// Init background substractor
-
-	//Ptr<BackgroundSubtractorMOG2> bg_model = createBackgroundSubtractorMOG2(history, 16, true).dynamicCast<BackgroundSubtractorMOG2>();
-	// Adjust automatically the number of K gaussian for the background mixture, history of (1) frames, threshold (2), detect Shaddows in grey (3) (mouaif)
 	Ptr<BackgroundSubtractorKNN> bg_model = createBackgroundSubtractorKNN(param.history, 400, true).dynamicCast<BackgroundSubtractorKNN>();
-	// history of (1) frames (too much is worst), threshold (2), detect Shaddows in grey (3) (mouaif). Better, doesn't get excited that much at frames 40-50
 
 	// Create empty input img, foreground and background image and foreground mask.
 	Mat img, foregroundMask, backgroundImage, foregroundImg;
-	//vector<Mat> clrMasks;
 
 	Image<Vec3f> Moy;
 
 	Scalar meanColor = moyenneMask(Moy, video_file_path);
 
-	Vec3b meanColorVec3b = Vec3b(meanColor[0], meanColor[1], meanColor[2]); // Attention, c'est en HSV !!
+	Vec3b meanColorVec3b = Vec3b(meanColor[0], meanColor[1], meanColor[2]); // In HSV !
 
-	//Mat_<Vec3b> matColorBGR(1, 1);
-	//Mat_<Vec3b> matColorHSV(1, 1);
-	//matColorHSV.at<Vec3b>(0, 0) = meanColorVec3b;
 	cout << "Mean colour of the background" << meanColorVec3b << endl;
-	//cvtColor(matColorHSV, matColorBGR, COLOR_HSV2BGR);
 
-	// The last color of this list is the color "of the background"
+	// The last color of this list is the mean color of the videp
 	input.colours.push_back(meanColorVec3b);
 
-
-	// capture video from source 0, which is web camera, If you want capture video from file just replace //by �VideoCapture cap("videoFile.mov")
+	// Load the video
 	VideoCapture cap(video_file_path);
 	int frame_count = cap.get(CAP_PROP_FRAME_COUNT);
 	cout << "Video of " << frame_count << " frames loaded" << endl;
@@ -245,7 +192,6 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 
 	// main loop to grab sequence of input files
 	for (;;)
-	//while(frame_index < 50)
 	{
 
 		bool ok = cap.grab();
@@ -256,38 +202,29 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 			std::cout << "Video Capture Fail" << std::endl;
 			break;
 		}
-		// cout << "frame index = " << frame_index << endl;
 		frame_index++;
 
 		// obtain input image from source
-
 		cap.retrieve(img, CAP_OPENNI_BGR_IMAGE);
 
 		if (foregroundMask.empty())
 		{
 			foregroundMask.create(img.size(), CV_8U);
 		}
+
 		// compute foreground mask 8 bit image
 		// -1 is parameter that chose automatically your learning rate
-
 		bg_model->apply(img, foregroundMask, true ? -1 : 0);
 
-		//bg_model->apply(img, foregroundMask, 0.1);
-
+		// For the 10 first frames, we use an alternative method to compute the foregroundMask
 		if ((frame_index < 10) && (param.threshold > 0))
 		{
 			foregroundMask.create(img.size(), CV_8U);
 			initializeMask(foregroundMask, img, Moy, param.threshold);
 		}
 
-
-	
-		//colorMask(img, foregroundMask, clrMasks, colorsJerseys);
-
 	
 		// smooth the mask to reduce noise in image
-		//GaussianBlur(foregroundMask, foregroundMask, Size(11, 11), 3.5, 3.5);
-
 		GaussianBlur(foregroundMask, foregroundMask, Size(param.gaussianSize, param.gaussianSize), 3.5, 3.5);
 
 	
@@ -305,19 +242,15 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 
 
 		std::vector< ColoredRectangle > rects;
-		
-
-		cv::Mat binary;
 		labelBlobs(foregroundMask, img, rects, param, input.colours, input.pitch);
 
-
-		Mat foregroundImgWithRect;
-
-		foregroundImg.copyTo(foregroundImgWithRect);
-
+		
+		// Save the list of rectangles of this frame
 		frame_rectangles.push_back(rects);
 
-
+		// Add the rectangles to the foreground Image
+		Mat foregroundImgWithRect;
+		foregroundImg.copyTo(foregroundImgWithRect);
 		for (int k = 0; k < rects.size(); k++)
 		{	
 			Vec3b colorOfTheRectangle;
@@ -336,7 +269,6 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 		imshow("foreground mask", foregroundMask);
 		imshow("foreground image", foregroundImgWithRect);
 
-		//waitKey();
 		if (waitKey(25) == 27)
 			break;
 
@@ -351,17 +283,9 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 	destroyWindow("real image");
 }
 
+// Checks if there is a corner of the rectangle inside the pitch
 bool filter_rectangles(Rect rectangle, Point pitch[])
 {
-	//vector<vector<Rect>> filtered;
-	//for (int frame_index = 0; frame_index < detection_rectangles.size(); frame_index++)
-	//{
-		//cout << " frame index = " << frame_index << endl;
-		//int in_rectangles_count = 0;
-		//vector<Rect> frame_rectangles = detection_rectangles[frame_index], frame_filtered_rectangles;
-		//for (int rectangle_index = 0; rectangle_index < frame_rectangles.size(); rectangle_index++)
-		//{
-			//Rect rectangle = frame_rectangles[rectangle_index];
 			float x = rectangle.x, y = rectangle.y, w = rectangle.width, h = rectangle.height;
 			Point corners[4] = {Point(x, y), Point(x + w, y), Point(x, y + h), Point(x + w, y + h)};
 			bool out = true;
@@ -371,19 +295,11 @@ bool filter_rectangles(Rect rectangle, Point pitch[])
 				if (isInside(pitch, 4, point))
 					out = false;
 			}
-			//if (!out)
-			//{
-				//frame_filtered_rectangles.push_back(rectangle);
-				//in_rectangles_count ++;
-			//}
-		//}
-		//filtered.push_back(frame_filtered_rectangles);
-		//cout << "Kept " << in_rectangles_count << " rectangles out of " << frame_rectangles.size() << endl;
-	//}
+
 	return !out;
 }
 
-
+//Detect the colour of a rectangle, if we know the "blob" (list of Point) corresponding
 int detect_colour(const Mat &frame, const ColoredRectangle &rectangle, const vector<Vec3b> &colorsJersey, DetectionParam param)// N'est pas utilisée directement sur les blobs finalement, mais pourrait l'^^etre si les seuils étaient adaptés
 {
 	if (rectangle.colors.size() != colorsJersey.size()) {
@@ -415,6 +331,7 @@ int detect_colour(const Mat &frame, const ColoredRectangle &rectangle, const vec
 		int n = imgHSV.cols;
 		int m = imgHSV.rows;
 
+		// Computes the distColor matrix by looking, for each pixel, to the colour of "colorsJersey" that is the closest to that pixel
 		for (int k = 0; k < t; k++) {
 			int iColorMaj = c-1;
 
@@ -424,32 +341,34 @@ int detect_colour(const Mat &frame, const ColoredRectangle &rectangle, const vec
 				int threshold = (int)(norm(matColorHSV.at<Vec3b>(0, r), matColorHSV.at<Vec3b>(0, c-1), NORM_L2));
 				if ((norm1 < norm2) && (norm1*norm1 < threshold*threshold/25))
 				{
-					iColorMaj = r;
+					iColorMaj = r; 
 				}
 			}
-			distColor.at<int>(iColorMaj, 0) += 1;
+			distColor.at<int>(iColorMaj, 0) += 1; // The colours n° iColourMaj scores 1 point
 		}
 
-
+		// Searches which colour of coloursJersey scores more points in "distColor"
 		int iColorMaj = 0;
 		for (int l = 0; l < c-1; l++) {
 			if (distColor.at<int>(l, 0) > distColor.at<int>(iColorMaj, 0)) {
 				iColorMaj = l;
 			}
 		}
-		if (distColor.at<int>(iColorMaj, 0) < (t / param.proportioncolour)) { // Mais si ça ne représente pas au moins 1/2 (limite arbitraire aussi...) des points du blob...
-			iColorMaj =  - 1;
+		if (distColor.at<int>(iColorMaj, 0) < (t / param.proportioncolour)) { 
+			iColorMaj =  - 1; // If the number of pixels (score) attributed to the colour is yet too low, we can't attribute a colour to the rectangle
 		}
 		return iColorMaj;
 	}
 }
 
+//Detect the colour of a rectangle, if we don't know the "blob" (list of Point) corresponding
 int detect_colour(const Mat &frame, const Rect &rectangle, const vector<Vec3b> &colorsJersey, DetectionParam param)
 {
 	int c = colorsJersey.size();
 	vector<Vec3b> colors(colorsJersey);
 	ColoredRectangle colored;
 	colored = colored.create_Colored_Rectangle(c);
+	// Computes the mean colour of the rectangle and creates a blob with all the points of the rectangle
 	Mat Mean, CroppedMean;
 	frame.convertTo(Mean, CV_32F);
 	CroppedMean = Mean(rectangle);
@@ -462,11 +381,13 @@ int detect_colour(const Mat &frame, const Rect &rectangle, const vector<Vec3b> &
 	}
 	Vec3b meanColorVec3b = Vec3b(meanColor[0], meanColor[1], meanColor[2]);
 	colors[c - 1] = meanColorVec3b;
+	// Calls detect_colour on the blob created, with appropriate parameters
 	param.proportioncolour = 1000;
 	int iColorMaj = detect_colour(frame, colored, colors, param);
 	return iColorMaj;
 }
 
+// Transforms a list of list of ColoredRectangle in a list of list containing only the field "rect" of these ColoredRectangle
 vector<vector<Rect>> get_rectangles(vector<vector<ColoredRectangle>> &colored){
 	vector<vector<Rect>> res;
 	for (auto frame : colored){
@@ -478,6 +399,72 @@ vector<vector<Rect>> get_rectangles(vector<vector<ColoredRectangle>> &colored){
 	}
 	return res;
 }
+
+
+// void record_hog_rectangles(string video_file_path, vector<vector<Rect>> &hog_frame_rectangles, int percent)
+// {
+
+// 	float weight_threshold = 0.0;
+
+// 	int frame_index = 0;
+// 	VideoCapture video(video_file_path);
+
+// 	// Check if camera opened successfully
+// 	if (!video.isOpened())
+// 	{
+// 		cout << "Error opening video stream or file" << endl;
+// 	};
+// 	Mat frame;
+// 	video >> frame;
+
+// 	// Pedestrian recordor
+// 	HOGDescriptor hog;
+// 	hog.setSVMDetector(HOGDescriptor::getDefaultPeopleDetector());
+
+// 	while (1)
+// 	{
+
+// 		// Capture frame-by-frame
+// 		video.read(frame);
+// 		// cout << "frame index : " << frame_index << endl;
+
+// 		// If the frame is empty, break immediately
+// 		if (frame.empty())
+// 		{
+// 			cout << "Coudl not read frame " << frame_index << endl;
+// 			break;
+// 		}
+
+// 		vector<Rect> recordion_rectangles;
+// 		vector<double> weights;
+
+// 		Mat gray_frame, gray_frame_preprocessed;
+// 		cvtColor(frame, gray_frame, COLOR_BGR2GRAY);
+// 		BrightnessAndContrastAuto(gray_frame, gray_frame_preprocessed, percent);
+// 		hog.detectMultiScale(gray_frame_preprocessed, recordion_rectangles, weights);
+// 		int hog_rectangle_count = recordion_rectangles.size();
+// 		// cout << "recordion complete, number of reactangles deteceted : " << hog_rectangle_count << endl;
+
+// 		hog_frame_rectangles.push_back(recordion_rectangles);
+// 		/// draw recordions
+// 		for (size_t i = 0; i < hog_rectangle_count; i++)
+// 		{
+// 			if (weights[i] < weight_threshold)
+// 				continue;
+// 			rectangle(gray_frame, recordion_rectangles[i], cv::Scalar(0, 0, 255), 3);
+// 		}
+
+// 		// Display the resulting frame
+// 		imshow("Frame ", gray_frame);
+
+// 		// Press ESC to stop
+// 		if (waitKey(1) == 27)
+// 			break;
+
+// 		frame_index++;
+// 	}
+// }
+
 // void BrightnessAndContrastAuto(const cv::Mat &src, cv::Mat &dst, float clipHistPercent = 0)
 // {
 
@@ -575,113 +562,4 @@ vector<vector<Rect>> get_rectangles(vector<vector<ColoredRectangle>> &colored){
 //}
 //}
 
-// void add_trackers(vector<Rect> &hog_rectangles, vector<Rect> &tracking_rectangles, vector<Ptr<TrackerCSRT>> player_trackers){
-// 	int hog_rectangles_count = hog_rectangles.size();
-// 	for (int rectangle_index = 0; rectangle_index < hog_rectangles_count; rectangle_index++)
-// 		{
-// 			Rect new_rectangle = hog_rectangles[rectangle_index];
-// 			if (overlap(new_rectangle, tracking_rectangles) == true) continue;
 
-// 			tracking_rectangles.push_back(new_rectangle);
-// 			Ptr<TrackerCSRT> tracker = TrackerCSRT::create();
-// 			tracker->init(frame, *(iterator));
-// 			player_trackers
-
-// Create a mask image for drawing purposes
-//Mat mask = Mat::zeros(old_frame.size(), old_frame.type());
-
-//setMouseCallback("source", add_point_source, &input);
-// 		}
-// 	return;
-// }
-
-// void record_hog_rectangles(string video_file_path, vector<vector<Rect>> &hog_frame_rectangles, int percent)
-// {
-
-// 	float weight_threshold = 0.0;
-
-// 	int frame_index = 0;
-// 	VideoCapture video(video_file_path);
-
-// 	// Check if camera opened successfully
-// 	if (!video.isOpened())
-// 	{
-// 		cout << "Error opening video stream or file" << endl;
-// 	};
-// 	Mat frame;
-// 	video >> frame;
-
-// 	// Pedestrian recordor
-// 	HOGDescriptor hog;
-// 	hog.setSVMDetector(HOGDescriptor::getDefaultPeopleDetector());
-
-// 	while (1)
-// 	{
-
-// 		// Capture frame-by-frame
-// 		video.read(frame);
-// 		// cout << "frame index : " << frame_index << endl;
-
-// 		// If the frame is empty, break immediately
-// 		if (frame.empty())
-// 		{
-// 			cout << "Coudl not read frame " << frame_index << endl;
-// 			break;
-// 		}
-
-// 		vector<Rect> recordion_rectangles;
-// 		vector<double> weights;
-
-// 		Mat gray_frame, gray_frame_preprocessed;
-// 		cvtColor(frame, gray_frame, COLOR_BGR2GRAY);
-// 		BrightnessAndContrastAuto(gray_frame, gray_frame_preprocessed, percent);
-// 		hog.detectMultiScale(gray_frame_preprocessed, recordion_rectangles, weights);
-// 		int hog_rectangle_count = recordion_rectangles.size();
-// 		// cout << "recordion complete, number of reactangles deteceted : " << hog_rectangle_count << endl;
-
-// 		hog_frame_rectangles.push_back(recordion_rectangles);
-// 		/// draw recordions
-// 		for (size_t i = 0; i < hog_rectangle_count; i++)
-// 		{
-// 			if (weights[i] < weight_threshold)
-// 				continue;
-// 			rectangle(gray_frame, recordion_rectangles[i], cv::Scalar(0, 0, 255), 3);
-// 		}
-
-// 		// Display the resulting frame
-// 		imshow("Frame ", gray_frame);
-
-// 		// Press ESC to stop
-// 		if (waitKey(1) == 27)
-// 			break;
-
-// 		frame_index++;
-// 	}
-// }
-
-// int main() {
-// 	string method;
-// 	vector<vector<Rect>> frame_rectangles;
-// 	// // cout << "Method ?";
-// 	// cin >> method;
-// 	if (method == "HOG") {
-// 		// int percent;
-// 		// cout << "percent ";
-// 		// cin >> percent;
-// 		// record_hog_rectangles(VIDEO_FILE_PATH, frame_rectangles, percent);
-// 		return 0;
-// 	}
-// 	else {
-// 		int history = 30, sizeMinRect = 10, gaussianSize = 7;
-// 		string technic = "a";
-// 		// cout << "history ";
-// 		// cin >> history;
-// 		// cout << "sizeMinRect";
-// 		// cin >> sizeMinRect;
-// 		// cout << "technic";
-// 		// cin >> technic;
-// 		// cout << "gaussianSize";
-// 		// cin >> gaussianSize;
-// 		record_backgroundsubstract_rectangles(VIDEO_FILE_PATH, frame_rectangles, technic, history, sizeMinRect, gaussianSize);
-// 	}
-// }

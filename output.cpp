@@ -52,6 +52,8 @@ Image<Vec3b> video_homography(string video_file_path, vector<vector<Rect>> &trac
 
             // If detected colour does not match any of the selected colours, -1 and returned and no point is plotted
             if (colour_index < 0) continue; 
+
+			// If the detected colour matches a selected colour, the transformed point is saved in the corresponding list
 			if (colour_index == 0) {
 				team1.push_back(homographic_transformation(homography_matrix, point));
 			}
@@ -66,6 +68,7 @@ Image<Vec3b> video_homography(string video_file_path, vector<vector<Rect>> &trac
 		}
 		imshow("top view", frame_target_image);
 
+		// Computes the area of the convex hull delimited by all the points of each team
 		if (team1.size() > 0) {
 			convexHull(team1, convexHull1);
 			areaTeam1 = contourArea(convexHull1);
@@ -75,6 +78,7 @@ Image<Vec3b> video_homography(string video_file_path, vector<vector<Rect>> &trac
 			areaTeam2 = contourArea(convexHull2);
 		}
 
+		// Displays in the console which team has the biggest area covered
 		if (areaTeam1 > areaTeam2) {
 			cout << "L'equipe 1 couvre plus de terrain, avec " << areaTeam1 << " pixels contre " << areaTeam2 << endl;
 		}
