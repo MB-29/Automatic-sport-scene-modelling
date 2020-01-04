@@ -190,9 +190,10 @@ void labelBlobs(const cv::Mat &binary, const Mat &frame, std::vector <ColoredRec
 							rectangle.blob = blob;
 							int icolour = detect_colour(frame, rectangle, colorsJerseys, param);
 							rectangle.colors[icolour] = 1;
-							if (icolour != (c - 1)) { //Cette condition ne marche pas, la couleur bleu sombre est trop proche de la couleur moyenne du background
+							cout << colorsJerseys[icolour] << endl;
+							//if (icolour != (c - 1)) { //On utilise cette condition plus tard sur les rectangles tracés
 								rectangles.push_back(rectangle);
-							}
+							//}
 						}
 					}
 				}
@@ -330,13 +331,6 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 		}
 
 		// Show the results
-		//cout << "frame number" << endl;
-		//cout << cap.get(CAP_PROP_POS_FRAMES) << endl;
-		//cout << "Nsamples" << endl;
-		//cout << bg_model->getNSamples() <<endl;
-		//cout << "k" << endl;
-		//cout << bg_model->getkNNSamples() << endl;
-		//cout << bg_model->getNMixtures() << endl;;
 		imshow("real image", img);
 		imshow("foreground mask", foregroundMask);
 		imshow("foreground image", foregroundImgWithRect);
@@ -419,12 +413,6 @@ int detect_colour(const Mat &frame, const ColoredRectangle &rectangle, const vec
 		int n = imgHSV.cols;
 		int m = imgHSV.rows;
 
-		//for (int r = 0; r < c; r++) {
-			//for (int k = 0; k < t; k++) {
-				//distColor.at<int>(r, 0) += (int)(norm(imgHSV.at<Vec3b>(points[k].y, points[k].x), matColorHSV.at<Vec3b>(0, r), NORM_L2));
-				//distance_1 += norm(pixel_colour - jersey_colour_1);
-			//}
-		//}
 		for (int k = 0; k < t; k++) {
 			int iColorMaj = c-1;
 			for (int r = 0; r < c - 1; r++) {
@@ -433,7 +421,6 @@ int detect_colour(const Mat &frame, const ColoredRectangle &rectangle, const vec
 				if ((norm1 < norm2) && (norm1 < param.thresholdcolour))
 				{
 					iColorMaj = r;
-					//distance_1 += norm(pixel_colour - jersey_colour_1);
 				}
 			}
 			distColor.at<int>(iColorMaj, 0) += 1;
