@@ -25,7 +25,6 @@ struct DetectionParam {
 	int gaussianSize;
 	float threshold;
 	int proportioncolour;
-	int thresholdcolour;
 };
 
 //Listes de listes de rectangles avec couleurs associ�es

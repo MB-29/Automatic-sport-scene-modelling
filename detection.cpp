@@ -188,7 +188,7 @@ void labelBlobs(const cv::Mat &binary, const Mat &frame, std::vector <ColoredRec
 					if (((param.blobFlag) && (blob.size() > param.sizeMinBlob)) || (!param.blobFlag)) {
 						if ((rectangle.rect.height > param.sizeMinRect) && (rectangle.rect.height < param.sizeMaxRect)) {
 							rectangle.blob = blob;
-							int icolour = detect_colour(frame, rectangle, colorsJerseys, param);
+							int icolour = detect_colour(frame, rectangle.rect, colorsJerseys, param); // Nous utilisons finalement la version de detect_colour qui s'applique aux rectangles, pour laquelle les seuils utilisés sont plus adaptés
 							rectangle.colors[icolour] = 1;
 							cout << colorsJerseys[icolour] << endl;
 							//if (icolour != (c - 1)) { //On utilise cette condition plus tard sur les rectangles tracés
@@ -383,16 +383,17 @@ bool filter_rectangles(Rect rectangle, Point pitch[])
 }
 
 
-int detect_colour(const Mat &frame, const ColoredRectangle &rectangle, const vector<Vec3b> &colorsJersey, DetectionParam param)
+int detect_colour(const Mat &frame, const ColoredRectangle &rectangle, const vector<Vec3b> &colorsJersey, DetectionParam param)// N'est pas utilisée directement sur les blobs finalement, mais pourrait l'^^etre si les seuils étaient adaptés
 {
 	if (rectangle.colors.size() != colorsJersey.size()) {
 		cout << "Error : different numbers of jersey colours" << endl;
 	}
 	if (rectangle.blob.size() == 0) {
-		int iColour = detect_colour(frame, rectangle.rect, colorsJersey, param);
+		int iColour = detect_colour(frame, rectangle, colorsJersey, param);
 		return iColour;
 	}
 	else {
+
 		Image<Vec3b> image(frame);
 		Image<Vec3b> imgHSV;
 		int c = colorsJersey.size();
@@ -415,10 +416,12 @@ int detect_colour(const Mat &frame, const ColoredRectangle &rectangle, const vec
 
 		for (int k = 0; k < t; k++) {
 			int iColorMaj = c-1;
-			for (int r = 0; r < c - 1; r++) {
+
+			for (int r = 0; r < c-1; r++) {
 				int norm1 = (int)(norm(imgHSV.at<Vec3b>(points[k].y, points[k].x), matColorHSV.at<Vec3b>(0, r), NORM_L2));
 				int norm2 = (int)(norm(imgHSV.at<Vec3b>(points[k].y, points[k].x), matColorHSV.at<Vec3b>(0, iColorMaj), NORM_L2));
-				if ((norm1 < norm2) && (norm1 < param.thresholdcolour))
+				int threshold = (int)(norm(matColorHSV.at<Vec3b>(0, r), matColorHSV.at<Vec3b>(0, c-1), NORM_L2));
+				if ((norm1 < norm2) && (norm1*norm1 < threshold*threshold/25))
 				{
 					iColorMaj = r;
 				}
@@ -459,7 +462,6 @@ int detect_colour(const Mat &frame, const Rect &rectangle, const vector<Vec3b> &
 	Vec3b meanColorVec3b = Vec3b(meanColor[0], meanColor[1], meanColor[2]);
 	colors[c - 1] = meanColorVec3b;
 	param.proportioncolour = 1000;
-	param.thresholdcolour = 10;
 	int iColorMaj = detect_colour(frame, colored, colors, param);
 	return iColorMaj;
 }

@@ -82,8 +82,7 @@ int main(int argc, char** argv)
 	param.blobFlag = false;
 	param.threshold = 0.5;// En HSV, la distance entre 2 couleurs varie plut�t entre 50000 et 100000. En BGR, entre 0 et 1
 	param.technic = "a";
-	param.proportioncolour = 2;
-	param.thresholdcolour = 300; // Le seuil de 300 pour HSV est très expérimental. Le seuil 40 pour BGR aussi.
+	param.proportioncolour = 100;
 	cout << "Detecting rectangles" << endl;
 	record_backgroundsubstract_rectangles(source_path, detected_colored_rectangles, param, input);
 	// record_detection_rectangles(VIDEO_FILE_PATH, detected_rectangles);
