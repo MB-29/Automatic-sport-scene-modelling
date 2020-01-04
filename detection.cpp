@@ -1,12 +1,9 @@
 #include "detection.h"
-#include "polygon.cpp"
 #include "calibration.h"
+#include "polygon.cpp"
 
 
-// calcul couleurs rectangles dans fonction à part
 // ColoredRectangle dans tracking.cpp
-// HSV moyenneMask
-// pitch dans Decetction_param ?
 // Améliorer détection couleurs
 // Taille des joueurs avec perspective
 // Statistiques à faire ??
@@ -86,7 +83,7 @@ void initializeMask(Mat &foregroundMask, const Mat &frame, const Mat &Moy, float
 			}
 		}
 	}
-	imshow("maaskMoy", foregroundMask);
+	imshow("maskMoy", foregroundMask);
 }
 
 void colorMask(const Mat &img, const Mat&foreground, std::vector<Mat> &rst, vector<Vec3b> colorsJersey) {
@@ -175,7 +172,7 @@ void labelBlobs(const cv::Mat &binary, const Mat &frame, std::vector <ColoredRec
 				std::vector<Point> blob;
 				rectangle.rect = rectToFill;
 
-				if (filter_rectangles(rectangle, pitch)==true) {
+				if (filter_rectangles(rectangle.rect, pitch)==true) {
 					for (int i = rectangle.rect.y; i < (rectangle.rect.y + rectangle.rect.height); i++)
 					{
 						for (int j = rectangle.rect.x; j < (rectangle.rect.x + rectangle.rect.width); j++)
@@ -192,9 +189,10 @@ void labelBlobs(const cv::Mat &binary, const Mat &frame, std::vector <ColoredRec
 					if (((param.blobFlag) && (blob.size() > param.sizeMinBlob)) || (!param.blobFlag)) {
 						if ((rectangle.rect.height > param.sizeMinRect) && (rectangle.rect.height < param.sizeMaxRect)) {
 							rectangle.blob = blob;
-							int icolour = detect_colour(frame, rectangle, colorsJerseys);
+							int icolour = detect_colour(frame, rectangle.rect, colorsJerseys, param); // Nous utilisons finalement la version de detect_colour qui s'applique aux rectangles, pour laquelle les seuils utilisés sont plus adaptés
 							rectangle.colors[icolour] = 1;
-							//if (icolour != (c - 1)) { Cette condition ne marche pas, la couleur bleu sombre est trop proche de la couleur moyenne du background
+							cout << colorsJerseys[icolour] << endl;
+							//if (icolour != (c - 1)) { //On utilise cette condition plus tard sur les rectangles tracés
 								rectangles.push_back(rectangle);
 							//}
 						}
@@ -208,7 +206,7 @@ void labelBlobs(const cv::Mat &binary, const Mat &frame, std::vector <ColoredRec
 	}
 }
 
-void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<ColoredRectangle>> &frame_rectangles, DetectionParam param, vector<Vec3b> colorsJerseys, Point pitch[])
+void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<ColoredRectangle>> &frame_rectangles, DetectionParam param, Input &input)
 {
 
 	// Init background substractor
@@ -235,7 +233,7 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 	//cvtColor(matColorHSV, matColorBGR, COLOR_HSV2BGR);
 
 	// The last color of this list is the color "of the background"
-	colorsJerseys.push_back(meanColorVec3b);
+	input.colours.push_back(meanColorVec3b);
 
 
 	// capture video from source 0, which is web camera, If you want capture video from file just replace //by �VideoCapture cap("videoFile.mov")
@@ -247,6 +245,7 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 
 	// main loop to grab sequence of input files
 	for (;;)
+	//while(frame_index < 50)
 	{
 
 		bool ok = cap.grab();
@@ -305,12 +304,11 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 		bg_model->getBackgroundImage(backgroundImage);
 
 
-		std::vector<std::vector<Point>> blobs;
 		std::vector< ColoredRectangle > rects;
 		
 
 		cv::Mat binary;
-		labelBlobs(foregroundMask, img, rects, param, colorsJerseys, pitch);
+		labelBlobs(foregroundMask, img, rects, param, input.colours, input.pitch);
 
 
 		Mat foregroundImgWithRect;
@@ -323,9 +321,9 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 		for (int k = 0; k < rects.size(); k++)
 		{	
 			Vec3b colorOfTheRectangle;
-			for (int l = 0; l < colorsJerseys.size(); l++) {
+			for (int l = 0; l < input.colours.size(); l++) {
 				if (rects[k].colors[l] == 1) {
-					colorOfTheRectangle = colorsJerseys[l];
+					colorOfTheRectangle = input.colours[l];
 
 				}
 			}
@@ -334,18 +332,11 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 		}
 
 		// Show the results
-		//cout << "frame number" << endl;
-		//cout << cap.get(CAP_PROP_POS_FRAMES) << endl;
-		//cout << "Nsamples" << endl;
-		//cout << bg_model->getNSamples() <<endl;
-		//cout << "k" << endl;
-		//cout << bg_model->getkNNSamples() << endl;
-		//cout << bg_model->getNMixtures() << endl;;
 		imshow("real image", img);
 		imshow("foreground mask", foregroundMask);
 		imshow("foreground image", foregroundImgWithRect);
 
-		// waitKey();
+		//waitKey();
 		if (waitKey(25) == 27)
 			break;
 
@@ -360,7 +351,7 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 	destroyWindow("real image");
 }
 
-bool filter_rectangles(ColoredRectangle rectangle, Point pitch[])
+bool filter_rectangles(Rect rectangle, Point pitch[])
 {
 	//vector<vector<Rect>> filtered;
 	//for (int frame_index = 0; frame_index < detection_rectangles.size(); frame_index++)
@@ -371,7 +362,7 @@ bool filter_rectangles(ColoredRectangle rectangle, Point pitch[])
 		//for (int rectangle_index = 0; rectangle_index < frame_rectangles.size(); rectangle_index++)
 		//{
 			//Rect rectangle = frame_rectangles[rectangle_index];
-			float x = rectangle.rect.x, y = rectangle.rect.y, w = rectangle.rect.width, h = rectangle.rect.height;
+			float x = rectangle.x, y = rectangle.y, w = rectangle.width, h = rectangle.height;
 			Point corners[4] = {Point(x, y), Point(x + w, y), Point(x, y + h), Point(x + w, y + h)};
 			bool out = true;
 			for (int corner_index = 0; corner_index < 4; corner_index++)
@@ -393,61 +384,86 @@ bool filter_rectangles(ColoredRectangle rectangle, Point pitch[])
 }
 
 
-int detect_colour(const Mat &frame, const ColoredRectangle &rectangle, vector<Vec3b> colorsJersey)
+int detect_colour(const Mat &frame, const ColoredRectangle &rectangle, const vector<Vec3b> &colorsJersey, DetectionParam param)// N'est pas utilisée directement sur les blobs finalement, mais pourrait l'^^etre si les seuils étaient adaptés
 {
 	if (rectangle.colors.size() != colorsJersey.size()) {
 		cout << "Error : different numbers of jersey colours" << endl;
 	}
-	Image<Vec3b> image(frame);
-	Image<Vec3b> imgHSV;
-	int c = colorsJersey.size();
-	vector<Point> points = rectangle.blob;
-	int t = points.size();
-	Mat_<Vec3b> matColorBGR(1, c);
-	Mat_<Vec3b> matColorHSV(1, c);
-	Mat_<int> distColor(t, 1, CV_32FC1);
-	for (int l = 0; l < c; l++) {
-		distColor.at<int>(l, 0) = 0;
+	if (rectangle.blob.size() == 0) {
+		int iColour = detect_colour(frame, rectangle, colorsJersey, param);
+		return iColour;
 	}
-	for (int r = 0; r < c; r++) {
-		matColorBGR.at<Vec3b>(0, r) = colorsJersey[r];
-	}
+	else {
 
-	cvtColor(matColorBGR, matColorHSV, COLOR_BGR2HSV);
-	cvtColor(image, imgHSV, COLOR_BGR2HSV);
-	int n = imgHSV.cols;
-	int m = imgHSV.rows;
+		Image<Vec3b> image(frame);
+		Image<Vec3b> imgHSV;
+		int c = colorsJersey.size();
+		vector<Point> points = rectangle.blob;
+		int t = points.size();
+		Mat_<Vec3b> matColorBGR(1, c);
+		Mat_<Vec3b> matColorHSV(1, c);
+		Mat_<int> distColor(c, 1, CV_32FC1);
+		for (int l = 0; l < c; l++) {
+			distColor.at<int>(l, 0) = 0;
+		}
+		for (int r = 0; r < c; r++) {
+			matColorBGR.at<Vec3b>(0, r) = colorsJersey[r];
+		}
 
-	//for (int r = 0; r < c; r++) {
-		//for (int k = 0; k < t; k++) {
-			//distColor.at<int>(r, 0) += (int)(norm(imgHSV.at<Vec3b>(points[k].y, points[k].x), matColorHSV.at<Vec3b>(0, r), NORM_L2));
-			//distance_1 += norm(pixel_colour - jersey_colour_1);
-		//}
-	//}
-	for (int k = 0; k < t; k++) {
+		cvtColor(matColorBGR, matColorHSV, COLOR_BGR2HSV);
+		cvtColor(image, imgHSV, COLOR_BGR2HSV);
+		int n = imgHSV.cols;
+		int m = imgHSV.rows;
+
+		for (int k = 0; k < t; k++) {
+			int iColorMaj = c-1;
+
+			for (int r = 0; r < c-1; r++) {
+				int norm1 = (int)(norm(imgHSV.at<Vec3b>(points[k].y, points[k].x), matColorHSV.at<Vec3b>(0, r), NORM_L2));
+				int norm2 = (int)(norm(imgHSV.at<Vec3b>(points[k].y, points[k].x), matColorHSV.at<Vec3b>(0, iColorMaj), NORM_L2));
+				int threshold = (int)(norm(matColorHSV.at<Vec3b>(0, r), matColorHSV.at<Vec3b>(0, c-1), NORM_L2));
+				if ((norm1 < norm2) && (norm1*norm1 < threshold*threshold/25))
+				{
+					iColorMaj = r;
+				}
+			}
+			distColor.at<int>(iColorMaj, 0) += 1;
+		}
+
+
 		int iColorMaj = 0;
-		for (int r = 0; r < c-1; r++) {
-			int norm1 = (int)(norm(imgHSV.at<Vec3b>(points[k].y, points[k].x), matColorHSV.at<Vec3b>(0, r), NORM_L2));
-			int norm2 = (int)(norm(imgHSV.at<Vec3b>(points[k].y, points[k].x), matColorHSV.at<Vec3b>(0, iColorMaj), NORM_L2));
-			if ((norm1 < norm2) && (norm1 < 300))// Le seuil de 30 est très expérimental
-			{
-				iColorMaj = r;
-				//distance_1 += norm(pixel_colour - jersey_colour_1);
+		for (int l = 0; l < c-1; l++) {
+			if (distColor.at<int>(l, 0) > distColor.at<int>(iColorMaj, 0)) {
+				iColorMaj = l;
 			}
 		}
-		distColor.at<int>(iColorMaj, 0) += 1;
+		if (distColor.at<int>(iColorMaj, 0) < (t / param.proportioncolour)) { // Mais si ça ne représente pas au moins 1/2 (limite arbitraire aussi...) des points du blob...
+			iColorMaj = c - 1;
+		}
+		return iColorMaj;
 	}
+}
 
+int detect_colour(const Mat &frame, const Rect &rectangle, const vector<Vec3b> &colorsJersey, DetectionParam param)
+{
+	int c = colorsJersey.size();
+	vector<Vec3b> colors(colorsJersey);
+	ColoredRectangle colored;
+	colored = colored.create_Colored_Rectangle(c);
+	Mat Mean, CroppedMean;
+	frame.convertTo(Mean, CV_32F);
+	CroppedMean = Mean(rectangle);
+	Scalar meanColor = mean(CroppedMean);
+	for (int x = rectangle.x; x < rectangle.x + rectangle.width ; x++) {
+		for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
+			colored.blob.push_back(Point(x, y));
 
-	int iColorMaj = c-1;
-	for (int l = 0; l < c; l++) {
-		if (distColor.at<int>(l, 0) > distColor.at<int>(iColorMaj, 0)) {
-			iColorMaj = l;
 		}
 	}
-	if (distColor.at<int>(iColorMaj, 0) < (t / 2)) { // Mais si ça ne représente pas au moins 1/2 (limite arbitraire aussi...) des points du blob...
-		iColorMaj = c - 1;
-	}
+	Vec3b meanColorVec3b = Vec3b(meanColor[0], meanColor[1], meanColor[2]);
+	colors[c - 1] = meanColorVec3b;
+	param.proportioncolour = 1000;
+	int iColorMaj = detect_colour(frame, colored, colors, param);
 	return iColorMaj;
 }
 

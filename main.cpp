@@ -2,6 +2,7 @@
 #include "calibration.h"
 #include "tracking.h"
 #include "detection.h"
+#include "output.cpp"
 
 int main(int argc, char** argv)
 {	
@@ -79,8 +80,9 @@ int main(int argc, char** argv)
 	param.blobFlag = false;
 	param.threshold = 0.5;// En HSV, la distance entre 2 couleurs varie plut�t entre 50000 et 100000. En BGR, entre 0 et 1
 	param.technic = "a";
+	param.proportioncolour = 100;
 	cout << "Detecting rectangles" << endl;
-	record_backgroundsubstract_rectangles(source_path, detected_colored_rectangles, param, input.colours, input.pitch);
+	record_backgroundsubstract_rectangles(source_path, detected_colored_rectangles, param, input);
 	// record_detection_rectangles(VIDEO_FILE_PATH, detected_rectangles);
 	cout << "Detection complete" << endl;
 	cout << "Detecting rectangles for " << detected_rectangles.size() << " frames" << endl;
@@ -95,7 +97,7 @@ int main(int argc, char** argv)
 
 	// Plot points on the top view 
 	cout << "Displaying output. Press any key to go forward." << endl;
-	video_homography(source_path, matched_rectangles, &input);
+	video_homography(source_path, matched_rectangles, &input, param);
 
 	waitKey();
 	return 0;
