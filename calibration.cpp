@@ -86,8 +86,8 @@ void video_homography(string video_file_path, vector<vector<Rect>> &tracking_rec
 
 		Image<Vec3b> source_image(frame);
 		Image<Vec3b> frame_target_image = (Image<Vec3b>)target_image.clone();
-		//vector<Rect> frame_tracking_rectangles = *(tracking_rectangles_iterator);
-		vector<Rect> frame_tracking_rectangles = tracking_rectangles[frame_index];
+		vector<Rect> frame_tracking_rectangles = *(tracking_rectangles_iterator);
+		//vector<Rect> frame_tracking_rectangles = tracking_rectangles[frame_index];
 		vector<Point> team1, team2, convexHull1, convexHull2;
 		double areaTeam1 = 0;
 		double areaTeam2 = 0;
@@ -127,8 +127,11 @@ void video_homography(string video_file_path, vector<vector<Rect>> &tracking_rec
 		if (areaTeam1 > areaTeam2) {
 			cout << "L'equipe 1 couvre plus de terrain, avec " << areaTeam1 << " pixels contre " << areaTeam2 << endl;
 		}
-		else {
+		else if (areaTeam2 > areaTeam2) {
 			cout << "L'equipe 2 couvre plus de terrain, avec " << areaTeam2 << " pixels contre " << areaTeam1 << endl;
+		}
+		else {
+			cout << "Egalte avec " << areaTeam1 << " chacun" << endl;
 		}
 
 		// Increment

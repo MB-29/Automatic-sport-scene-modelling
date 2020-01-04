@@ -188,11 +188,8 @@ void labelBlobs(const cv::Mat &binary, const Mat &frame, std::vector <ColoredRec
 					if (((param.blobFlag) && (blob.size() > param.sizeMinBlob)) || (!param.blobFlag)) {
 						if ((rectangle.rect.height > param.sizeMinRect) && (rectangle.rect.height < param.sizeMaxRect)) {
 							rectangle.blob = blob;
-							int icolour = detect_colour(frame, rectangle.rect, colorsJerseys, param);
+							int icolour = detect_colour(frame, rectangle, colorsJerseys, param);
 							rectangle.colors[icolour] = 1;
-							if (icolour == (c - 1)) {
-								cout << colorsJerseys[icolour] << endl;
-							}
 							if (icolour != (c - 1)) { //Cette condition ne marche pas, la couleur bleu sombre est trop proche de la couleur moyenne du background
 								rectangles.push_back(rectangle);
 							}
@@ -207,7 +204,7 @@ void labelBlobs(const cv::Mat &binary, const Mat &frame, std::vector <ColoredRec
 	}
 }
 
-void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<ColoredRectangle>> &frame_rectangles, DetectionParam param, Input input)
+void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<ColoredRectangle>> &frame_rectangles, DetectionParam param, Input &input)
 {
 
 	// Init background substractor
@@ -245,8 +242,8 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 	int frame_index = 1;
 
 	// main loop to grab sequence of input files
-	//for (;;)
-	while(frame_index < 15)
+	for (;;)
+	//while(frame_index < 50)
 	{
 
 		bool ok = cap.grab();
@@ -392,7 +389,7 @@ bool filter_rectangles(Rect rectangle, Point pitch[])
 }
 
 
-int detect_colour(const Mat &frame, const ColoredRectangle &rectangle, vector<Vec3b> colorsJersey, DetectionParam param)
+int detect_colour(const Mat &frame, const ColoredRectangle &rectangle, const vector<Vec3b> &colorsJersey, DetectionParam param)
 {
 	if (rectangle.colors.size() != colorsJersey.size()) {
 		cout << "Error : different numbers of jersey colours" << endl;
@@ -429,7 +426,7 @@ int detect_colour(const Mat &frame, const ColoredRectangle &rectangle, vector<Ve
 			//}
 		//}
 		for (int k = 0; k < t; k++) {
-			int iColorMaj = 0;
+			int iColorMaj = c-1;
 			for (int r = 0; r < c - 1; r++) {
 				int norm1 = (int)(norm(imgHSV.at<Vec3b>(points[k].y, points[k].x), matColorHSV.at<Vec3b>(0, r), NORM_L2));
 				int norm2 = (int)(norm(imgHSV.at<Vec3b>(points[k].y, points[k].x), matColorHSV.at<Vec3b>(0, iColorMaj), NORM_L2));
@@ -443,13 +440,12 @@ int detect_colour(const Mat &frame, const ColoredRectangle &rectangle, vector<Ve
 		}
 
 
-		int iColorMaj = c - 1;
-		for (int l = 0; l < c; l++) {
+		int iColorMaj = 0;
+		for (int l = 0; l < c-1; l++) {
 			if (distColor.at<int>(l, 0) > distColor.at<int>(iColorMaj, 0)) {
 				iColorMaj = l;
 			}
 		}
-
 		if (distColor.at<int>(iColorMaj, 0) < (t / param.proportioncolour)) { // Mais si ça ne représente pas au moins 1/2 (limite arbitraire aussi...) des points du blob...
 			iColorMaj = c - 1;
 		}
@@ -457,19 +453,27 @@ int detect_colour(const Mat &frame, const ColoredRectangle &rectangle, vector<Ve
 	}
 }
 
-int detect_colour(const Mat &frame, const Rect &rectangle, vector<Vec3b> colorsJersey, DetectionParam param)
+int detect_colour(const Mat &frame, const Rect &rectangle, const vector<Vec3b> &colorsJersey, DetectionParam param)
 {
 	int c = colorsJersey.size();
+	vector<Vec3b> colors(colorsJersey);
 	ColoredRectangle colored;
 	colored = colored.create_Colored_Rectangle(c);
+	Mat Mean, CroppedMean;
+	frame.convertTo(Mean, CV_32F);
+	CroppedMean = Mean(rectangle);
+	Scalar meanColor = mean(CroppedMean);
 	for (int x = rectangle.x; x < rectangle.x + rectangle.width ; x++) {
 		for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
 			colored.blob.push_back(Point(x, y));
+
 		}
 	}
-	param.proportioncolour = 4;
-	param.thresholdcolour = 200;
-	int iColorMaj = detect_colour(frame, colored, colorsJersey, param);
+	Vec3b meanColorVec3b = Vec3b(meanColor[0], meanColor[1], meanColor[2]);
+	colors[c - 1] = meanColorVec3b;
+	param.proportioncolour = 1000;
+	param.thresholdcolour = 10;
+	int iColorMaj = detect_colour(frame, colored, colors, param);
 	return iColorMaj;
 }
 

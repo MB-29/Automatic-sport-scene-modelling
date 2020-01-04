@@ -77,7 +77,7 @@ void initializeMask(Mat &foregroundMask, const Mat &frame, const Mat &Moy, float
 bool filter_rectangles(Rect rectangle, Point pitch[]);
 void colorMask(const Mat &img, const Mat&foreground, std::vector<Mat> &rst, vector<Vec3b> colors);
 void labelBlobs(const cv::Mat &binary, const Mat &frame, std::vector <ColoredRectangle> &rectangles, DetectionParam param, vector<Vec3b> colorsJerseys, Point pitch[]);
-void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<ColoredRectangle>> &frame_rectangles, DetectionParam param, Input input);
-int detect_colour(const Mat &frame,const ColoredRectangle &rectangle, vector<Vec3b> colorsJersey, DetectionParam param);
-int detect_colour(const Mat &frame, const Rect &rectangle, vector<Vec3b> colorsJersey, DetectionParam param);
+void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<ColoredRectangle>> &frame_rectangles, DetectionParam param, Input &input);
+int detect_colour(const Mat &frame,const ColoredRectangle &rectangle, const vector<Vec3b> &colorsJersey, DetectionParam param);
+int detect_colour(const Mat &frame, const Rect &rectangle, const vector<Vec3b> &colorsJersey, DetectionParam param);
 vector<vector<Rect>> get_rectangles(vector<vector<ColoredRectangle>> &colored);

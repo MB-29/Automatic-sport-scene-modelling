@@ -1,6 +1,6 @@
 
 #include "calibration.h"
-//#include "tracking.h"
+#include "tracking.h"
 #include "detection.h"
 
 
@@ -22,10 +22,10 @@ int main(int argc, char** argv)
 						"{@target | | top view image}";
 
 	CommandLineParser parser(argc, argv, keys);
-	//String source_path = parser.get<String>(0);
-	String source_path = "../input/videos/ShortBasket.mp4";
-	//String target_path = parser.get<String>(1);
-	String target_path = "../input/images/pitch_resized.png";
+	String source_path = parser.get<String>(0);
+	//String source_path = "../input/videos/ShortBasket.mp4";
+	String target_path = parser.get<String>(1);
+	//String target_path = "../input/images/pitch_resized.png";
 
 	// Load video
 	VideoCapture video(source_path);
@@ -98,7 +98,7 @@ int main(int argc, char** argv)
 	param.threshold = 0.5;// En HSV, la distance entre 2 couleurs varie plut�t entre 50000 et 100000. En BGR, entre 0 et 1
 	param.technic = "a";
 	param.proportioncolour = 2;
-	param.thresholdcolour = 300; // Le seuil de 80 pour HSV est très expérimental. Le seuil 40 pour BGR aussi.
+	param.thresholdcolour = 300; // Le seuil de 300 pour HSV est très expérimental. Le seuil 40 pour BGR aussi.
 	cout << "Detecting rectangles" << endl;
 	record_backgroundsubstract_rectangles(source_path, detected_colored_rectangles, param, input);
 	// record_detection_rectangles(VIDEO_FILE_PATH, detected_rectangles);
