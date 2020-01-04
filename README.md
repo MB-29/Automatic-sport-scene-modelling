@@ -1,7 +1,7 @@
 # Automatic sport scene modelling
 
 ## Demo
-[Demo video on YouTube](https://www.youtube.com/watch?v=p3PAhbZSOk4)
+[Demo video on YouTube](https://www.youtube.com/watch?v=OM7V0shw3fI)
 
 ## Input 
 Sport scene video, with fixed camera
