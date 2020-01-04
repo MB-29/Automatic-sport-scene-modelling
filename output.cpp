@@ -35,6 +35,9 @@ Image<Vec3b> video_homography(string video_file_path, vector<vector<Rect>> &trac
 		Image<Vec3b> source_image(frame);
 		Image<Vec3b> frame_target_image = (Image<Vec3b>)target_image.clone();
 		vector<Rect> frame_tracking_rectangles = *(tracking_rectangles_iterator);
+		vector<Point> team1, team2, convexHull1, convexHull2;
+		double areaTeam1 = 0;
+		double areaTeam2 = 0;
 
 		// Plot points on both source and target images
 		for (int rectangle_index = 0; rectangle_index < frame_tracking_rectangles.size(); rectangle_index++)
@@ -49,6 +52,12 @@ Image<Vec3b> video_homography(string video_file_path, vector<vector<Rect>> &trac
 
             // If detected colour does not match any of the selected colours, -1 and returned and no point is plotted
             if (colour_index < 0) continue; 
+			if (colour_index == 0) {
+				team1.push_back(homographic_transformation(homography_matrix, point));
+			}
+			else {
+				team2.push_back(homographic_transformation(homography_matrix, point));
+			}
             Vec3b colour = input->colours[colour_index   ];
 			circle(frame, point, 2, colour, 2);
 			Point target_point = homographic_transformation(homography_matrix, point);
@@ -56,6 +65,25 @@ Image<Vec3b> video_homography(string video_file_path, vector<vector<Rect>> &trac
 			circle(cumulated_positions, target_point, 2, colour, 2);
 		}
 		imshow("top view", frame_target_image);
+
+		if (team1.size() > 0) {
+			convexHull(team1, convexHull1);
+			areaTeam1 = contourArea(convexHull1);
+		}
+		if (team2.size() > 0) {
+			convexHull(team2, convexHull2);
+			areaTeam2 = contourArea(convexHull2);
+		}
+
+		if (areaTeam1 > areaTeam2) {
+			cout << "L'equipe 1 couvre plus de terrain, avec " << areaTeam1 << " pixels contre " << areaTeam2 << endl;
+		}
+		else if (areaTeam2 > areaTeam2) {
+			cout << "L'equipe 2 couvre plus de terrain, avec " << areaTeam2 << " pixels contre " << areaTeam1 << endl;
+		}
+		else {
+			cout << "Egalte avec " << areaTeam1 << " chacun" << endl;
+		}
 
 		// Increment
 		tracking_rectangles_iterator++;

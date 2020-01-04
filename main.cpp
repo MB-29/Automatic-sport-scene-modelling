@@ -12,7 +12,10 @@ int main(int argc, char** argv)
 
 	CommandLineParser parser(argc, argv, keys);
 	String source_path = parser.get<String>(0);
+	//String source_path = "../input/videos/ShortBasket.mp4";
+
 	String target_path = parser.get<String>(1);
+	//String target_path = "../input/images/pitch_resized.png";
 
 	// Load video
 	VideoCapture video(source_path);
