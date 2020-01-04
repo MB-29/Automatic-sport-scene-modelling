@@ -3,7 +3,7 @@
 float AREA_OVERLAP_THRESHOLD = 0.2;
 float AREA_INCLUSION_THRESHOLD = 0.8;
 
-// Determine weather two rectangles overlap or not, according to arbitrary constants
+// Determine wether two rectangles overlap or not, according to arbitrary constants
 bool overlap(Rect new_rectangle, vector<Rect> tracking_rectangles)
 {
 	int tracked_players_count = tracking_rectangles.size();

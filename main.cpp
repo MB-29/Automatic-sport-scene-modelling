@@ -9,13 +9,9 @@ int main(int argc, char** argv)
 	// Parse arguments
     const String keys = "{@source | | source video file path }"
 						"{@target | | top view image}";
-
 	CommandLineParser parser(argc, argv, keys);
 	String source_path = parser.get<String>(0);
-	//String source_path = "../input/videos/ShortBasket.mp4";
-
 	String target_path = parser.get<String>(1);
-	//String target_path = "../input/images/pitch_resized.png";
 
 	// Load video
 	VideoCapture video(source_path);
@@ -81,12 +77,11 @@ int main(int argc, char** argv)
 	param.gaussianSize = 5;
 	param.sizeMinBlob = 300;
 	param.blobFlag = false;
-	param.threshold = 0.5;// En HSV, la distance entre 2 couleurs varie plut�t entre 50000 et 100000. En BGR, entre 0 et 1
+	param.threshold = 0.5;
 	param.technic = "a";
 	param.proportioncolour = 100;
 	cout << "Detecting rectangles" << endl;
 	record_backgroundsubstract_rectangles(source_path, detected_colored_rectangles, param, input);
-	// record_detection_rectangles(VIDEO_FILE_PATH, detected_rectangles);
 	cout << "Detection complete" << endl;
 	cout << "Detecting rectangles for " << detected_rectangles.size() << " frames" << endl;
 	detected_rectangles  = get_rectangles(detected_colored_rectangles);
