@@ -1,6 +1,6 @@
 
 #include "calibration.h"
-#include "tracking.h"
+//#include "tracking.h"
 #include "detection.h"
 #include "output.h"
 
@@ -11,11 +11,11 @@ int main(int argc, char** argv)
 						"{@target | | top view image}";
 
 	CommandLineParser parser(argc, argv, keys);
-	String source_path = parser.get<String>(0);
-	//String source_path = "../input/videos/ShortBasket.mp4";
+	//String source_path = parser.get<String>(0);
+	String source_path = "../input/videos/ShortBasket.mp4";
 
-	String target_path = parser.get<String>(1);
-	//String target_path = "../input/images/pitch_resized.png";
+	//String target_path = parser.get<String>(1);
+	String target_path = "../input/images/pitch_resized.png";
 
 	// Load video
 	VideoCapture video(source_path);
@@ -75,18 +75,18 @@ int main(int argc, char** argv)
 	vector<vector<ColoredRectangle>> detected_colored_rectangles;
 	vector<vector<Rect>> detected_rectangles;
 
+	// Set the most adapted parameters for detection
 	param.history = 5;
 	param.sizeMinRect = 0.4*typical_height;
 	param.sizeMaxRect = 1.5*typical_height;
 	param.gaussianSize = 5;
 	param.sizeMinBlob = 300;
 	param.blobFlag = false;
-	param.threshold = 0.5;// En HSV, la distance entre 2 couleurs varie plut�t entre 50000 et 100000. En BGR, entre 0 et 1
-	param.technic = "a";
+	param.threshold = 0.5;
+	param.technic = "KNN";
 	param.proportioncolour = 100;
 	cout << "Detecting rectangles" << endl;
 	record_backgroundsubstract_rectangles(source_path, detected_colored_rectangles, param, input);
-	// record_detection_rectangles(VIDEO_FILE_PATH, detected_rectangles);
 	cout << "Detection complete" << endl;
 	cout << "Detecting rectangles for " << detected_rectangles.size() << " frames" << endl;
 	detected_rectangles  = get_rectangles(detected_colored_rectangles);

@@ -52,17 +52,13 @@ struct pitch
 	vector<Point> polygon_points;
 };
 
-
-//void initialize_trackers(vector<Rect2d> rectangles, vector<Ptr<TrackerCSRT>> &player_trackers, Mat &frame);
 // void record_hog_rectangles(string video_file_path, vector<vector<Rect>> &frame_rectangles);
-//void record_tracking_rectangles(string video_file_path, vector<vector<Rect>> hog_frame_rectangles, vector<vector<Rect>> tracking_rectangles);
+// void BrightnessAndContrastAuto(const cv::Mat &src, cv::Mat &dst, float clipHistPercent = 0)
 
-//void add_trackers(vector<Rect> &detected_rectangles, vector<Rect> &matched_rectangles, vector<Ptr<TrackerCSRT>> &player_trackers, Mat &frame);
 
 Scalar moyenneMask(Mat &Moy, string filename);
 void initializeMask(Mat &foregroundMask, const Mat &frame, const Mat &Moy, float seuil);
 bool filter_rectangles(Rect rectangle, Point pitch[]);
-void colorMask(const Mat &img, const Mat&foreground, std::vector<Mat> &rst, vector<Vec3b> colors);
 void labelBlobs(const cv::Mat &binary, const Mat &frame, std::vector <ColoredRectangle> &rectangles, DetectionParam param, vector<Vec3b> colorsJerseys, Point pitch[]);
 void record_backgroundsubstract_rectangles(string video_file_path, vector<vector<ColoredRectangle>> &frame_rectangles, DetectionParam param, Input &input);
 int detect_colour(const Mat &frame,const ColoredRectangle &rectangle, const vector<Vec3b> &colorsJersey, DetectionParam param);
