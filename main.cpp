@@ -3,18 +3,6 @@
 #include "tracking.h"
 #include "detection.h"
 
-
-// string VIDEO_FILE_PATH = "../input/videos/ShortBasket.mp4";
-// string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/basket_short2.mp4";
-// string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/short.mp4";
-// string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis2.mp4";
-// string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis_short.mp4";
-// string VIDEO_FILE_PATH = "/Users/matthieu/Movies/tracking/tennis3.mp4";
-
-// string above_image_path = "../input/images/pitch_resized.png";
-// string above_image_path = "../input/images/tennis_court.png";
-// string photo_path = "../input/images/photo.jpg";
-
 int main(int argc, char** argv)
 {	
 	// Parse arguments
@@ -54,7 +42,6 @@ int main(int argc, char** argv)
 	setMouseCallback("source", add_point_source, &input);
 	setMouseCallback("target", add_point_target, &input);
 	waitKey();
-	// destroyWindow("source");
 	destroyWindow("target");
 	cout << "Computing homography" << endl;
 	input.homography_matrix = findHomography(input.source_points, input.target_points);
@@ -73,14 +60,12 @@ int main(int argc, char** argv)
 	}
 
 	// Select a player	
-	cout << "Select a player" << endl;
+	cout << "Click and drag to delimit a player" << endl;
 	input.player = selectROI("source", source_image);
 	int typical_height = input.player.height;
-	//int typical_height = 100;
-
 
 	// Select colours
-	cout << "Point and click to select a color, press space to add, press a key validate." << endl;
+	cout << "Point and click to select a jersey colour, press SPACE to add, press any key to validate." << endl;
 	setMouseCallback("source", select_colour, &input);
 	waitKey();
 	cout << "Number of colours : " << input.colours.size() << endl;
@@ -107,22 +92,16 @@ int main(int argc, char** argv)
 	detected_rectangles  = get_rectangles(detected_colored_rectangles);
 
 
-	// Filter rectangles
-	//detected_rectangles = filter_rectangles(detected_rectangles, input.pitch);
-	// Je l'ai fait en m�me temps que la d�tection, �a me permettait de le visualiser (Margot)
-
 	// Player tracking
-
 	vector<vector<Rect>> matched_rectangles;
-	//record_tracking_rectangles(source_path, detected_rectangles, matched_rectangles);
-	//cout << "Tracking complete" << endl;
-	//cout << "Tracking vector has "<< matched_rectangles.size()<< " elements" << endl;
+	record_tracking_rectangles(source_path, detected_rectangles, matched_rectangles);
+	cout << "Tracking complete" << endl;
+	cout << "Tracking vector has "<< matched_rectangles.size()<< " elements" << endl;
 
 
-	// Plot points on the top view
-	cout << "Starting video homography" << endl;
+	// Plot points on the top view 
+	cout << "Displaying output. Press any key to go forward." << endl;
 	video_homography(source_path, matched_rectangles, &input, input.colours, param);
-	cout << "Finished" << endl;
 
 	waitKey();
 	return 0;

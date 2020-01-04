@@ -18,7 +18,6 @@ bool overlap(Rect new_rectangle, vector<Rect> tracking_rectangles)
 	return false;
 }
 
-// 
 vector<Rect> choose_rectangles(vector<Rect> &frame_detected_rectangles, vector<Rect> &frame_tracking_rectangles)
 {
 	vector<Rect> matched_rectangles = frame_tracking_rectangles;
@@ -27,7 +26,7 @@ vector<Rect> choose_rectangles(vector<Rect> &frame_detected_rectangles, vector<R
 	for (int detected_index = 0; detected_index < frame_detected_rectangles.size(); detected_index++)
 	{
 		Rect detected_rectangle = frame_detected_rectangles[detected_index];
-		// A priori, newly detected rectangles matches a new player  
+		// A priori, newly detected rectangles match new players (i.e players not already tracked)
 		bool new_player = true;
 		// For each detected rectangle, test if it overlaps with an already matched rectangle
 		for (int tracking_index = 0; tracking_index < frame_tracking_rectangles.size(); tracking_index++)

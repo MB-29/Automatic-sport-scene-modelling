@@ -24,3 +24,5 @@ cd build
 cmake ..
 ./main [path to video file] [path to top view image]
 ```
+
+Once the first frame of the output is displayed, press any key to move on.
