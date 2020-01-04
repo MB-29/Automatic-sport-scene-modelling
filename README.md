@@ -22,6 +22,7 @@ Sport scene video, with fixed camera
 mkdir build
 cd build
 cmake ..
+make
 ./main [path to video file] [path to top view image]
 ```
 
