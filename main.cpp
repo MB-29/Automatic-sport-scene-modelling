@@ -2,6 +2,7 @@
 #include "calibration.h"
 #include "tracking.h"
 #include "detection.h"
+#include "output.cpp"
 
 int main(int argc, char** argv)
 {	
@@ -11,9 +12,7 @@ int main(int argc, char** argv)
 
 	CommandLineParser parser(argc, argv, keys);
 	String source_path = parser.get<String>(0);
-	//String source_path = "../input/videos/ShortBasket.mp4";
 	String target_path = parser.get<String>(1);
-	//String target_path = "../input/images/pitch_resized.png";
 
 	// Load video
 	VideoCapture video(source_path);
@@ -45,7 +44,6 @@ int main(int argc, char** argv)
 	destroyWindow("target");
 	cout << "Computing homography" << endl;
 	input.homography_matrix = findHomography(input.source_points, input.target_points);
-	cout << input.homography_matrix << endl;
 	input.target_image = Image<Vec3b>(imread(target_path));
 
 	// Delimit pitch area by pointing and clicking
@@ -90,7 +88,6 @@ int main(int argc, char** argv)
 	cout << "Detecting rectangles for " << detected_rectangles.size() << " frames" << endl;
 	detected_rectangles  = get_rectangles(detected_colored_rectangles);
 
-
 	// Player tracking
 	vector<vector<Rect>> matched_rectangles;
 	record_tracking_rectangles(source_path, detected_rectangles, matched_rectangles);
@@ -100,7 +97,8 @@ int main(int argc, char** argv)
 
 	// Plot points on the top view 
 	cout << "Displaying output. Press any key to go forward." << endl;
-	video_homography(source_path, matched_rectangles, &input, input.colours, param);
+	Image<Vec3b> cumulated_positions = video_homography(source_path, matched_rectangles, &input, param);
+	imshow ("cumulated positions", cumulated_positions);
 
 	waitKey();
 	return 0;

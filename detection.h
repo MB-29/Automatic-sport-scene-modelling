@@ -6,10 +6,11 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include "opencv2/opencv.hpp"
 #include <opencv2/core.hpp>
-//#include <opencv2/tracking.hpp>
+#include <opencv2/tracking.hpp>
 
 #include <iostream>
 #include "image.h"
+#include "calibration.h"
 
 
 using namespace std;
@@ -43,19 +44,6 @@ struct ColoredRectangle {
 		colored_rectangle.colors = colors_created;
 		return colored_rectangle;
 	}
-};
-
-struct Input
-{
-	Image<Vec3b> source_image;
-	vector<Point2f> source_points;
-	Image<Vec3b> target_image;
-	vector<Point2f> target_points;
-	Mat homography_matrix;
-	vector<Vec3b> colours;
-	Rect player;
-	Point pitch[4];
-	int pitch_points_count;
 };
 
 struct pitch

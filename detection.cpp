@@ -1,4 +1,5 @@
 #include "detection.h"
+#include "calibration.h"
 #include "polygon.cpp"
 
 
@@ -190,7 +191,7 @@ void labelBlobs(const cv::Mat &binary, const Mat &frame, std::vector <ColoredRec
 							rectangle.blob = blob;
 							int icolour = detect_colour(frame, rectangle.rect, colorsJerseys, param); // Nous utilisons finalement la version de detect_colour qui s'applique aux rectangles, pour laquelle les seuils utilisés sont plus adaptés
 							rectangle.colors[icolour] = 1;
-							cout << colorsJerseys[icolour] << endl;
+							// cout << colorsJerseys[icolour] << endl;
 							//if (icolour != (c - 1)) { //On utilise cette condition plus tard sur les rectangles tracés
 								rectangles.push_back(rectangle);
 							//}
@@ -255,7 +256,7 @@ void record_backgroundsubstract_rectangles(string video_file_path, vector<vector
 			std::cout << "Video Capture Fail" << std::endl;
 			break;
 		}
-		cout << "frame index = " << frame_index << endl;
+		// cout << "frame index = " << frame_index << endl;
 		frame_index++;
 
 		// obtain input image from source
@@ -437,7 +438,7 @@ int detect_colour(const Mat &frame, const ColoredRectangle &rectangle, const vec
 			}
 		}
 		if (distColor.at<int>(iColorMaj, 0) < (t / param.proportioncolour)) { // Mais si ça ne représente pas au moins 1/2 (limite arbitraire aussi...) des points du blob...
-			iColorMaj = c - 1;
+			iColorMaj =  - 1;
 		}
 		return iColorMaj;
 	}
